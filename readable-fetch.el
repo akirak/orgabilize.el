@@ -47,27 +47,28 @@
   :type 'number)
 
 (defconst readable-url-regexp-for-escaping
-  "Regexp pattern for URLs."
   (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
       ;; hostname
       (group (+ (not (any "/"))))
       ;; path
       (group (* (not (any "?#"))))
       ;; query
-      (? (group "?" (* (not (any "#")))))))
+      (?  (group "?" (* (not (any "#"))))))
+  "Regexp pattern for URLs.")
 
 (defun readable--file-escape-url (url)
   "Return a path-safe string for URL."
   (save-match-data
     (if (string-match readable-url-regexp-for-escaping url)
         (concat (->> (match-string 1 url)
-                     (replace-regexp-in-string (rx ".") "_"))
+                  (replace-regexp-in-string (rx ".") "_"))
                 "_"
                 (->> (match-string 2 url)
-                     (string-remove-suffix "/")
-                     (replace-regexp-in-string "/" "_")
-                     (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
-                     (readable--string-take 128))
+                  (string-remove-prefix "/")
+                  (string-remove-suffix "/")
+                  (replace-regexp-in-string "/" "_")
+                  (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
+                  (readable--string-take 128))
                 "__"
                 (readable--string-take
                  10 (sha1 (match-string 0 url))))

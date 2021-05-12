@@ -30,6 +30,19 @@
                       :to-equal buf1)))
         (delete-directory readable-cache-directory 'recursive)))))
 
+(describe "readable-url-regexp-for-escaping"
+  (it "matches URLs"
+    (let ((s "https://security.googleblog.com/2021/05/integrating-rust-into-android-open.html"))
+      (expect (and (string-match readable-url-regexp-for-escaping s)
+                   (match-string 1 s))
+              :to-equal "security.googleblog.com")
+      (expect (and (string-match readable-url-regexp-for-escaping s)
+                   (match-string 2 s))
+              :to-equal "/2021/05/integrating-rust-into-android-open.html")
+      (expect (and (string-match readable-url-regexp-for-escaping s)
+                   (match-string 3 s))
+              :to-be nil))))
+
 (defun readable-test-read-html (file url)
   (with-temp-buffer
     (insert-file-contents file)
