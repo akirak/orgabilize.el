@@ -45,6 +45,7 @@
 (defun readable-insert-org-link (url)
   "Insert an Org link for URL."
   (interactive "sUrl: ")
+  (derived-mode-p 'org-mode)
   (insert (org-link-make-string
            url (oref (readable-document-for-url url) title))))
 
@@ -61,6 +62,7 @@ If WITH-LINK is non-nil, each item will be linked to the source
 of the heading, if it has an id attribute."
   (interactive (list (read-string "Url: ")
                      :with-link current-prefix-arg))
+  (derived-mode-p 'org-mode)
   (insert (mapconcat (lambda (x)
                        (let ((level (readable-toc-item-level x))
                              (text (readable-toc-item-text x))
