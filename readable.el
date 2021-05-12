@@ -82,7 +82,8 @@ of the heading, if it has an id attribute."
   "Read URL in a non-file shr buffer."
   (interactive "sUrl: ")
   (let* ((document (readable-document-for-url url))
-         (buffer-name (generate-new-buffer-name (format "*readable shr %s*" title)))
+         (buffer-name (generate-new-buffer-name (format "*readable shr %s*"
+                                                        (oref document title))))
          (out-buffer (generate-new-buffer buffer-name)))
     (with-current-buffer out-buffer
       (insert "<h1>" (oref document title) "</h1>\n"
