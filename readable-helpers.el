@@ -76,11 +76,9 @@ CLASSES is a space-separated list of class names in an html
 element. Alternatively, you can specify MORE-CLASSES from
 multiple elements, for checking both a pre element and a code
 element inside it."
-  (let* ((nclasses (readable--normalize-html-classes (cons classes more-classes)))
-         (classes1 (readable--conventional-src-classes nclasses)))
-    (->> (append classes1 nclasses)
-      (-uniq)
-      (-find #'readable--src-language-p))))
+  (let ((nclasses (readable--normalize-html-classes (cons classes more-classes))))
+    (or (car (readable--conventional-src-classes nclasses))
+        (-find #'readable--src-language-p nclasses))))
 
 (provide 'readable-helpers)
 ;;; readable-helpers.el ends here
