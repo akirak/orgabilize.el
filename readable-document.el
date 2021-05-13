@@ -40,7 +40,7 @@
   :group 'readable
   :type 'file)
 
-(defcustom readable-args nil
+(defcustom readable-args '("--keep-classes")
   "List of command line arguments passed to readability-cli."
   :group 'readable
   :type '(repeat string))
