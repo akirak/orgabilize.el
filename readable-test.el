@@ -30,6 +30,38 @@
                       :to-equal buf1)))
         (delete-directory readable-cache-directory 'recursive)))))
 
+(describe "readable-src-lang-from-classes"
+  (it "detect a language"
+    (expect (readable-src-lang-from-classes "emacs-lisp")
+            :to-equal "emacs-lisp"))
+  (it "separates the class attribute by white spaces"
+    (expect (readable-src-lang-from-classes "heaven-and-hell | emacs-lisp")
+            :to-equal "emacs-lisp")
+    (expect (readable-src-lang-from-classes "heaven-and-hell\n|\nemacs-lisp\tc")
+            :to-equal "emacs-lisp"))
+  (it "accepts multiple arguments"
+    (expect (readable-src-lang-from-classes
+             "heaven-and-hell"
+             "|" "just-too-long-to-be-a-mode emacs-lisp another-lengthy-name")
+            :to-equal "emacs-lisp")
+    (expect (readable-src-lang-from-classes
+             ""
+             "emacs-lisp")
+            :to-equal "emacs-lisp")
+    (expect (readable-src-lang-from-classes
+             nil
+             ""
+             "emacs-lisp")
+            :to-equal "emacs-lisp"))
+  (it "detects a language class that starts with language- prefix"
+    (expect (readable-src-lang-from-classes
+             "language-emacs-lisp")
+            :to-equal "emacs-lisp")
+    (expect (readable-src-lang-from-classes
+             "heaven-and-hell"
+             "md:x-5 | language-c")
+            :to-equal "c")))
+
 (describe "readable-url-regexp-for-escaping"
   (it "matches URLs"
     (let ((s "https://security.googleblog.com/2021/05/integrating-rust-into-android-open.html"))

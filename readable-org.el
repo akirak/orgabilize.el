@@ -31,6 +31,7 @@
 
 (require 'org-ml)
 (require 'readable-document)
+(require 'readable-helpers)
 
 (cl-defstruct readable-org-branch
   "Container for an Org branch.
@@ -83,18 +84,6 @@ The argument should be an HTML dom as parsed using
         (->> str
           (replace-regexp-in-string (rx (+ (any space "\n"))) " ")
           (string-trim)))
-       (language-p
-        (name)
-        (when-let (mode (intern-soft (concat name "-mode")))
-          (commandp mode)))
-       (language-from-class
-        (class)
-        (when class
-          (->> (split-string class "\n")
-            (-map #'string-trim)
-            (--filter (string-match-p "[[:alnum:]]" it))
-            (-filter #'language-p)
-            (car))))
        (go-inline
         (nodes)
         (->> nodes
@@ -217,14 +206,19 @@ The argument should be an HTML dom as parsed using
                (go-list tag children)))
              (pre
               (pcase children
-                (`((code ,_ . ,content))
+                (`((code ,sub-attrs . ,content))
                  (readable-org-wrap-branch
                   (org-ml-build-src-block
+                   :language (readable-src-lang-from-classes
+                              (alist-get 'class attrs)
+                              (alist-get 'class sub-attrs))
                    :value (text-content content))))
                 (_
                  (readable-org-wrap-branch
                   (org-ml-build-src-block
-                   :valud (text-content children))))))
+                   :language (readable-src-lang-from-classes
+                              (alist-get 'class attrs))
+                   :value (text-content children))))))
              (blockquote
               (readable-org-wrap-branch
                (->> (org-ml-build-quote-block)
