@@ -89,6 +89,8 @@
                             readable-download-timeout)
         (when url-http-end-of-headers
           (delete-region (point-min) url-http-end-of-headers))
+        (unless (file-directory-p (file-name-directory cache-file))
+          (make-directory (file-name-directory cache-file) t))
         (write-file cache-file)))
     cache-file))
 
