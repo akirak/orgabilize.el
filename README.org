@@ -1,0 +1,57 @@
+* readable.el
+=readable= converts a web page into the Emacs Org mode format.
+It uses readability-cli as the backend.
+It is an alternative to org-web-tools (which uses pandoc for conversion) with an intent to produce a better output quality.
+
+# Add CI badges here
+
+#+BEGIN_HTML
+#+END_HTML
+** Table of contents
+:PROPERTIES:
+:TOC: siblings
+:END:
+** Installation
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:14]
+:END:
+*** Installing readability-cli
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:14]
+:END:
+
+You can install =readability-cli= package from npm globally.
+Alternatively for Nix users, I have a Nix derivation in my NUR repository:
+
+** Configuration
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:17]
+:END:
+** Usage
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:14]
+:END:
+*** Inserting a link
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:18]
+:END:
+*** Reading in a temporary buffer
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:17]
+:END:
+*** Inserting a particular section into the current Org buffer
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:16]
+:END:
+*** Archiving to a directory
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:16]
+:END:
+** COMMENT Meta :noexport:
+:PROPERTIES:
+:TOC:      ignore
+:END:
+# The COMMENT keyword prevents GitHub's renderer from showing this entry.
+# Local Variables:
+# eval: (when (require (quote org-make-toc) nil t) (org-make-toc-mode t))
+# End:
