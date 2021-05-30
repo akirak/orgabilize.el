@@ -56,7 +56,7 @@
       (?  (group "?" (* (not (any "#"))))))
   "Regexp pattern for URLs.")
 
-(defun readable--file-escape-url (url)
+(defun readable--file-escape-url-1 (url)
   "Return a path-safe string for URL."
   (save-match-data
     (if (string-match readable-url-regexp-for-escaping url)
@@ -76,7 +76,7 @@
 
 (defun readable--html-cache-file (url)
   "Return the cache file name for URL in full path."
-  (expand-file-name (concat (readable--file-escape-url url)
+  (expand-file-name (concat (readable--file-escape-url-1 url)
                             ".html")
                     readable-cache-directory))
 
