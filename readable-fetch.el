@@ -31,6 +31,7 @@
 
 (require 'url-http)
 (require 'subr-x)
+(require 'dash)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
@@ -46,15 +47,20 @@
   :group 'readable
   :type 'number)
 
-(defconst readable-url-regexp-for-escaping
-  (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
-      ;; hostname
-      (group (+ (not (any "/"))))
-      ;; path
-      (group (* (not (any "?#"))))
-      ;; query
-      (?  (group "?" (* (not (any "#"))))))
-  "Regexp pattern for URLs.")
+(eval-when-compile
+  (defconst readable-url-regexp-for-escaping
+    (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
+        ;; hostname
+        (group (+ (not (any "/"))))
+        ;; path
+        (?  "/")
+        (group (*? (not (any "?#"))))
+        (?  "/")
+        ;; query
+        (?  (or (group "?" (* (not (any "#"))))
+                (and "#" (+ anything))))
+        eol)
+    "Regexp pattern for URLs."))
 
 (defun readable--file-escape-url-1 (url)
   "Return a path-safe string for URL."
@@ -64,14 +70,13 @@
                   (replace-regexp-in-string (rx ".") "_"))
                 "_"
                 (->> (match-string 2 url)
-                  (string-remove-prefix "/")
-                  (string-remove-suffix "/")
                   (replace-regexp-in-string "/" "_")
                   (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
                   (readable--string-take 128))
-                "__"
+                "="
                 (readable--string-take
-                 10 (sha1 (match-string 0 url))))
+                 10 (sha1 (concat (match-string 2 url)
+                                  (match-string 3 url)))))
       (error "Did not match the URL pattern: %s" url))))
 
 (defun readable--html-cache-file (url)
