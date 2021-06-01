@@ -103,22 +103,26 @@ of the heading, if it has an id attribute."
   :type 'function)
 
 ;;;###autoload
-(transient-define-prefix readable-peek (url)
+(transient-define-prefix readable-peek (document)
   "Run an action on URL."
   [:description
-   (lambda () (format "Target: %s" readable-current-url))
-   ("u" readable:url-history)
-   ("-" readable:last-added-url)
-   ("." readable:url-at-point)]
-  [:description
-   "Thing"
-   ;; TODO: Define arguments
-   ;; (readable-peek:document)
-   ;; ("-d" "Document or URL" "document")
-   ;; ("-h" "Section (as a quote)" "section")
-   ;; ("-q" "Paragraph (as a quote)" "quote")
-   ;; ("-s" "Source block" "src")
-   ]
+   (lambda () (concat "Target: "
+                      (when readable-current-document
+                        (format "%s \"%s\""
+                                (oref readable-current-document url)
+                                (oref readable-current-document title)))))
+   ("u" readable:document-history)
+   ("-" readable:last-added-document)
+   ("." readable:document-at-point)]
+  ;; [:description
+  ;;  "Thing"
+  ;;  ;; TODO: Define arguments
+  ;;  ;; (readable-peek:document)
+  ;;  ;; ("-d" "Document or URL" "document")
+  ;;  ;; ("-h" "Section (as a quote)" "section")
+  ;;  ;; ("-q" "Paragraph (as a quote)" "quote")
+  ;;  ;; ("-s" "Source block" "src")
+  ;;  ]
   ["Org actions"
    :if readable--org-mode-p
    ("i" "Insert to Org" "org" readable-peek--insert-org-action)]
@@ -126,11 +130,12 @@ of the heading, if it has an id attribute."
   ;;  [("r" "Read or archive" readable-peek--read-action)
   ;;   ("C-w" "Copy thing" readable-peek--copy-action)
   ;;   ("C-b" "Browse in external browser" readable-peek--browse-action)]]
-  (interactive (list (or readable-current-url
-                         (or (readable--url-at-point)
-                             (readable--last-url)
-                             (read-string "Url: ")))))
-  (setq readable-current-url url)
+  (interactive (list (or readable-current-document
+                         (readable--document-at-point)
+                         (readable--last-added-document)
+                         (readable-document-for-url
+                          (read-string "Url: ")))))
+  (setq readable-current-document document)
   (transient-setup 'readable-peek))
 
 (transient-define-argument readable-peek:document ()
@@ -146,22 +151,22 @@ of the heading, if it has an id attribute."
   (derived-mode-p 'org-mode))
 
 (defun readable-peek--insert-org-action (url args)
-  (interactive (list readable-current-url
+  (interactive (list readable-current-document
                      (transient-args 'readable-peek)))
   (message "%s: %s" url args x))
 
 (defun readable-peek--read-action (url args)
-  (interactive (list readable-current-url
+  (interactive (list readable-current-document
                      (transient-args 'readable-peek)))
   (message "%s: %s" url args x))
 
 (defun readable-peek--copy-action (url args)
-  (interactive (list readable-current-url
+  (interactive (list readable-current-document
                      (transient-args 'readable-peek)))
   (message "%s: %s" url args x))
 
 (defun readable-peek--browse-action (url args)
-  (interactive (list readable-current-url
+  (interactive (list readable-current-document
                      (transient-args 'readable-peek)))
   (message "%s: %s" url args x))
 

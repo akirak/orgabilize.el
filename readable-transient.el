@@ -4,20 +4,20 @@
 (require 'transient)
 (require 'url-util)
 
-;;;; URLs (readable--url-variable)
+;;;; Documents
 
-(defvar readable-current-url nil)
+(defvar readable-current-document nil)
 
-(defclass readable--url-variable (transient-variable)
+(defclass readable:document (transient-variable)
   ((selector :initarg :selector :initform nil)
    (init :initarg :init :initform nil)))
 
-(cl-defmethod transient-init-value ((obj readable--url-variable))
+(cl-defmethod transient-init-value ((obj readable:document))
   (when-let* ((init (oref obj init))
               (value (funcall init)))
     (oset obj value value)))
 
-(cl-defmethod transient-infix-read ((obj readable--url-variable))
+(cl-defmethod transient-infix-read ((obj readable:document))
   (or (oref obj value)
       (when-let (selector (oref obj selector))
         (or (funcall selector)
@@ -25,40 +25,48 @@
               (message "Returned nil from %s" selector)
               nil)))))
 
-(cl-defmethod transient-infix-set ((obj readable--url-variable) value)
+(cl-defmethod transient-infix-set ((obj readable:document) value)
   (when value
-    (setq readable-current-url value)))
+    (setq readable-current-document value)))
 
-(cl-defmethod transient-format-value ((obj readable--url-variable))
+(cl-defmethod transient-format-value ((obj readable:document))
   (if-let (value (oref obj value))
-      (format "(%s)" value)
+      (format "(%s)" (oref value url))
     ""))
 
-;;;;; Selecting a URL from the history
+;;;;; Selecting a document from the history
 
-(transient-define-infix readable:url-history ()
-  :description "Set URL from history"
-  :class 'readable--url-variable
+(transient-define-infix readable:document-history ()
+  :description "Set document from history"
+  :class 'readable:document
   :selector (lambda ()
-              (completing-read "Url from history: "
-                               (--map (oref it url) readable-document-tracker)
-                               nil nil nil nil readable-current-url)))
+              (let ((url (completing-read
+                          "Url from history: "
+                          (--map (oref it url) readable-document-tracker)
+                          nil nil nil nil
+                          (when readable-current-document
+                            (oref readable-current-document url)))))
+                (ignore-errors
+                  (readable-document-for-url url)))))
 
 ;;;;; Completing a URL in context
 
-(transient-define-infix readable:last-added-url ()
-  :description "Last added URL"
-  :class 'readable--url-variable
-  :init #'readable--last-url)
+(transient-define-infix readable:last-added-document ()
+  :description "Last added document"
+  :class 'readable:document
+  :init #'readable--last-added-document)
 
-(defun readable--last-url ()
-  (when-let (doc (car readable-document-tracker))
-    (oref doc url)))
+(defun readable--last-added-document ()
+  (car readable-document-tracker))
 
-(transient-define-infix readable:url-at-point ()
+(transient-define-infix readable:document-at-point ()
   :description "URL at point"
-  :class 'readable--url-variable
-  :init #'readable--url-at-point)
+  :class 'readable:document
+  :init #'readable--document-at-point)
+
+(defun readable--document-at-point ()
+  (when-let (url (readable--url-at-point))
+    (readable-document-for-url url)))
 
 (defun readable--url-at-point ()
   (let ((url (or (when (derived-mode-p 'org-mode)
