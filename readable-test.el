@@ -62,6 +62,20 @@
              "md:x-5 | language-c")
             :to-equal "c")))
 
+(describe "readable--file-escape-url-1"
+  (it "converts a URL to a path-safe string"
+    (expect (readable--file-escape-url-1 "https://github.com/akirak/elinter/blob/v4/README.org")
+            :to-be-truthy)
+    (expect (readable--file-escape-url-1 "https://www.reddit.com/r/doctorwho/comments/nnm5cq/1_thing_ive_never_understood_about_no_timelords/")
+            :to-be-truthy))
+  (it "should return the same filename regardless of a trailing slash"
+    (expect (readable--file-escape-url-1 "https://github.com")
+            :to-equal
+            (readable--file-escape-url-1 "https://github.com/"))
+    (expect (readable--file-escape-url-1 "https://github.com/akirak")
+            :to-equal
+            (readable--file-escape-url-1 "https://github.com/akirak/"))))
+
 (describe "readable-url-regexp-for-escaping"
   (it "matches URLs"
     (let ((s "https://security.googleblog.com/2021/05/integrating-rust-into-android-open.html"))
