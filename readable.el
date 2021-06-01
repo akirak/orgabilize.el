@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'readable-document)
+(require 'readable-transient)
 
 (defgroup readable nil
   "Converts web pages into Org."
@@ -94,6 +95,80 @@ of the heading, if it has an id attribute."
       (read-only-mode t)
       (goto-char (point-min)))
     (pop-to-buffer-same-window out-buffer)))
+
+;;;; Peek interface for working with a URL
+
+(defvar readable-current-url nil)
+(defvar readable-default-url nil)
+
+(defcustom readable-browse-url-function #'browse-url
+  "Function used in the browse action of `readable-peek'."
+  :type 'function)
+
+;;;###autoload
+(transient-define-prefix readable-peek (url)
+  "Run an action on URL."
+  [:description
+   (lambda () (format "Target: %s" readable-current-url))
+   ("u" readable-transient-url-history)
+   ("-" readable-transient-last-added-url)
+   ("." readable-transient-url-at-point)
+   ("0" readable-transient-default-url)]
+  ;; ["Thing"
+  ;;  ;; TODO: Define arguments
+  ;;  (readable-peek:document)
+  ;;  ("-d" "Document or URL" "document")
+  ;;  ("-h" "Section (as a quote)" "section")
+  ;;  ("-q" "Paragraph (as a quote)" "quote")
+  ;;  ("-s" "Source block" "src")]
+  ["Org actions"
+   :if readable--org-mode-p
+   ("i" "Insert to Org" "org" readable-peek--insert-org-action)]
+  ;; ["Actions"
+  ;;  [("r" "Read or archive" readable-peek--read-action)
+  ;;   ("C-w" "Copy thing" readable-peek--copy-action)
+  ;;   ("C-b" "Browse in external browser" readable-peek--browse-action)]]
+  (interactive (list (or readable-current-url
+                         (or (readable--url-at-point)
+                             (readable--last-url)
+                             (read-string "Url: ")))))
+  (setq readable-current-url url
+        readable-default-url url)
+  (transient-setup 'readable-peek))
+
+(transient-define-argument readable-peek:document ()
+  :description "Document or URL"
+  :class 'transient-option
+  :shortarg "-m"
+  :argument "--message=")
+
+(defun readable-peek-arguments ()
+  (transient-args 'readable-peek))
+
+(defun readable--org-mode-p ()
+  (derived-mode-p 'org-mode))
+
+(defun readable-peek--insert-org-action (url args)
+  (interactive (list readable-current-url
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" url args x))
+
+(defun readable-peek--read-action (url args)
+  (interactive (list readable-current-url
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" url args x))
+
+(defun readable-peek--copy-action (url args)
+  (interactive (list readable-current-url
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" url args x))
+
+(defun readable-peek--browse-action (url args)
+  (interactive (list readable-current-url
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" url args x))
+
+;; (readable-peek "https://reddit.com")
 
 (provide 'readable)
 ;;; readable.el ends here
