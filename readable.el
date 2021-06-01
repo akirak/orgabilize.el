@@ -98,9 +98,6 @@ of the heading, if it has an id attribute."
 
 ;;;; Peek interface for working with a URL
 
-(defvar readable-current-url nil)
-(defvar readable-default-url nil)
-
 (defcustom readable-browse-url-function #'browse-url
   "Function used in the browse action of `readable-peek'."
   :type 'function)
@@ -110,17 +107,18 @@ of the heading, if it has an id attribute."
   "Run an action on URL."
   [:description
    (lambda () (format "Target: %s" readable-current-url))
-   ("u" readable-transient-url-history)
-   ("-" readable-transient-last-added-url)
-   ("." readable-transient-url-at-point)
-   ("0" readable-transient-default-url)]
-  ;; ["Thing"
-  ;;  ;; TODO: Define arguments
-  ;;  (readable-peek:document)
-  ;;  ("-d" "Document or URL" "document")
-  ;;  ("-h" "Section (as a quote)" "section")
-  ;;  ("-q" "Paragraph (as a quote)" "quote")
-  ;;  ("-s" "Source block" "src")]
+   ("u" readable:url-history)
+   ("-" readable:last-added-url)
+   ("." readable:url-at-point)]
+  [:description
+   "Thing"
+   ;; TODO: Define arguments
+   ;; (readable-peek:document)
+   ;; ("-d" "Document or URL" "document")
+   ;; ("-h" "Section (as a quote)" "section")
+   ;; ("-q" "Paragraph (as a quote)" "quote")
+   ;; ("-s" "Source block" "src")
+   ]
   ["Org actions"
    :if readable--org-mode-p
    ("i" "Insert to Org" "org" readable-peek--insert-org-action)]
@@ -132,8 +130,7 @@ of the heading, if it has an id attribute."
                          (or (readable--url-at-point)
                              (readable--last-url)
                              (read-string "Url: ")))))
-  (setq readable-current-url url
-        readable-default-url url)
+  (setq readable-current-url url)
   (transient-setup 'readable-peek))
 
 (transient-define-argument readable-peek:document ()
