@@ -33,6 +33,9 @@
 (require 'subr-x)
 (require 'dash)
 
+(require 'readable-utils)
+(require 'readable-log)
+
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
 
@@ -53,59 +56,17 @@
   :group 'readable
   :type 'file)
 
-(eval-when-compile
-  (defconst readable-url-regexp-for-escaping
-    (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
-        ;; hostname
-        (group (+ (not (any "/"))))
-        ;; path
-        (?  "/")
-        (group (*? (not (any "?#"))))
-        (?  "/")
-        ;; query
-        (?  (or (group "?" (* (not (any "#"))))
-                (and "#" (+ anything))))
-        eol)
-    "Regexp pattern for URLs."))
-
-(defun readable--file-escape-url-1 (url)
-  "Return a path-safe string for URL."
-  (save-match-data
-    (if (string-match readable-url-regexp-for-escaping url)
-        (concat (->> (match-string 1 url)
-                  (replace-regexp-in-string (rx ".") "_"))
-                "_"
-                (->> (match-string 2 url)
-                  (replace-regexp-in-string "/" "_")
-                  (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
-                  (readable--string-take 128))
-                "="
-                (readable--string-take
-                 10 (sha1 (concat (match-string 2 url)
-                                  (match-string 3 url)))))
-      (error "Did not match the URL pattern: %s" url))))
-
 (defun readable--html-cache-file (url)
   "Return the cache file name for URL in full path."
   (expand-file-name (concat (readable--file-escape-url-1 url)
                             ".html")
                     readable-cache-directory))
 
-(defun readable--log-serialize (obj)
-  (concat "- " (json-serialize obj) "\n"))
-
-(defsubst readable--ts-format-iso-8601 (time)
-  (format-time-string "%FT%X%:z" time))
-
 (defun readable--log-url (url &rest args)
-  (let ((obj (append (list :url url
-                           :time (readable--format-iso-8601 (current-time)))
-                     args)))
-    (async-start
-     `(lambda ()
-        (with-temp-buffer
-          (insert (readable--log-serialize ,obj))
-          (append-to-file (point-min) (point-max) readable-fetch-log-file))))))
+  "Log URL and ARGS to a file with the current timestamp."
+  (let ((entry `(,@args :url ,url
+                        :time ,(readable--format-iso-8601 (current-time)))))
+    (readable-log-plist entry readable-fetch-log-file)))
 
 (defun readable-origin-source (url)
   "Return a file name that contains the original content of URL."
@@ -128,14 +89,6 @@
                                   :duration (- (float-time) start-time))))
       (readable--log-url url :cache t))
     cache-file))
-
-;;;; Utilities
-
-(defsubst readable--string-take (len string)
-  "Take the first LEN characters of STRING."
-  (if (> len (length string))
-      string
-    (substring string 0 len)))
 
 (provide 'readable-fetch)
 ;;; readable-fetch.el ends here
