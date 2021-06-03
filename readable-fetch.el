@@ -47,6 +47,12 @@
   :group 'readable
   :type 'number)
 
+(defcustom readable-fetch-log-file
+  (expand-file-name "readable/fetch.log" user-emacs-directory)
+  "Path to a file to which fetched URLs are recorded."
+  :group 'readable
+  :type 'file)
+
 (eval-when-compile
   (defconst readable-url-regexp-for-escaping
     (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
@@ -85,18 +91,42 @@
                             ".html")
                     readable-cache-directory))
 
+(defun readable--log-serialize (obj)
+  (concat "- " (json-serialize obj) "\n"))
+
+(defsubst readable--ts-format-iso-8601 (time)
+  (format-time-string "%FT%X%:z" time))
+
+(defun readable--log-url (url &rest args)
+  (let ((obj (append (list :url url
+                           :time (readable--format-iso-8601 (current-time)))
+                     args)))
+    (async-start
+     `(lambda ()
+        (with-temp-buffer
+          (insert (readable--log-serialize ,obj))
+          (append-to-file (point-min) (point-max) readable-fetch-log-file))))))
+
 (defun readable-origin-source (url)
   "Return a file name that contains the original content of URL."
-  (let ((cache-file (readable--html-cache-file url)))
-    (unless (file-exists-p cache-file)
-      (with-current-buffer (url-retrieve-synchronously
-                            url t t
-                            readable-download-timeout)
-        (when url-http-end-of-headers
-          (delete-region (point-min) url-http-end-of-headers))
-        (unless (file-directory-p (file-name-directory cache-file))
-          (make-directory (file-name-directory cache-file) t))
-        (write-file cache-file)))
+  (let ((cache-file (readable--html-cache-file url))
+        (start-time (float-time)))
+    (if (file-exists-p cache-file)
+        (condition-case _
+            (with-current-buffer (url-retrieve-synchronously
+                                  url t t
+                                  readable-download-timeout)
+              (when url-http-end-of-headers
+                (delete-region (point-min) url-http-end-of-headers))
+              (unless (file-directory-p (file-name-directory cache-file))
+                (make-directory (file-name-directory cache-file) t))
+              (readable--log-url url
+                                 :size (buffer-size)
+                                 :duration (- (float-time) start-time))
+              (write-file cache-file))
+          (error (readable--log-url url :failed t
+                                    :duration (- (float-time) start-time))))
+      (readable--log-url url :cache t))
     cache-file))
 
 ;;;; Utilities

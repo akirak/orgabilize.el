@@ -89,6 +89,11 @@
                    (match-string 3 s))
               :to-be nil))))
 
+(describe "readable--log-url"
+  (xit "logs when a new resource is retrieved")
+  (xit "logs when the cache hits")
+  (xit "logs when a request fails"))
+
 (defun readable-test-read-html (file url)
   (with-temp-buffer
     (insert-file-contents file)
