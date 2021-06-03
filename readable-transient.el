@@ -3,10 +3,17 @@
 (require 'readable-document)
 (require 'transient)
 (require 'url-util)
+(require 'goto-addr)
+
+(defsubst readable--http-url-p (url)
+  "Return non-nil if URL is an http or https url."
+  (string-match-p (rx bos "http" (?  "s") ":") url))
 
 ;;;; Documents
 
 (defvar readable-current-document nil)
+
+(defvar goto-address-url-regexp nil)
 
 (defclass readable:document (transient-variable)
   ((selector :initarg :selector :initform nil)
@@ -34,7 +41,7 @@
       (format "(%s)" (oref value url))
     ""))
 
-;;;;; Selecting a document from the history
+;;;;; Selecting a document interactively
 
 (transient-define-infix readable:document-history ()
   :description "Set document from history"
@@ -48,6 +55,30 @@
                             (oref readable-current-document url)))))
                 (ignore-errors
                   (readable-document-for-url url)))))
+
+(transient-define-infix readable:url-from-kill-ring ()
+  :description "Set URL from kill ring"
+  :class 'readable:document
+  :selector (lambda ()
+              (let ((url (completing-read "Url: "
+                                          (readable--urls-from-selection))))
+                (ignore-errors
+                  (readable-document-for-url url)))))
+
+(defun readable--urls-from-selection ()
+  "Return a list of URLs contained in the selection."
+  (--> (funcall interprogram-paste-function)
+    (if (listp it) it (list it))
+    (append it kill-ring)
+    (-map #'clipurl--urls-in-string it)
+    (-flatten-n 1 it)))
+
+(defun readable--urls-in-string (string)
+  "Extract URLs from STRING"
+  (->> string
+    (s-match-strings-all goto-address-url-regexp)
+    (-flatten-n 1)
+    (-filter #'readable--http-url-p url)))
 
 ;;;;; Completing a URL in context
 
@@ -74,12 +105,8 @@
                      (plist-get :uri)))
                  (thing-at-point 'url)
                  (url-get-url-at-point))))
-    (when (and url (string-match-p (rx bos "http" (?  "s") ":") url))
+    (when (and url (readable--http-url-p url))
       url)))
-
-;;;; Transformation or selecting part of a document
-
-(defvar readable-current-transformation nil)
 
 (provide 'readable-transient)
 ;;; readable-transient.el ends here

@@ -105,31 +105,39 @@ of the heading, if it has an id attribute."
 ;;;###autoload
 (transient-define-prefix readable-peek (document)
   "Run an action on URL."
+  :incompatible '(("--document" "--section" "--quote" "--src")
+                  ("--format-org" "--format-markdown"))
   [:description
-   (lambda () (concat "Target: "
+   (lambda () (concat "Origin: "
                       (when readable-current-document
                         (format "%s \"%s\""
                                 (oref readable-current-document url)
                                 (oref readable-current-document title)))))
-   ("u" readable:document-history)
-   ("-" readable:last-added-document)
+   ("/" readable:document-history)
+   ("?" readable:url-from-kill-ring)
+   ("," readable:last-added-document)
    ("." readable:document-at-point)]
-  ;; [:description
-  ;;  "Thing"
-  ;;  ;; TODO: Define arguments
-  ;;  ;; (readable-peek:document)
-  ;;  ;; ("-d" "Document or URL" "document")
-  ;;  ;; ("-h" "Section (as a quote)" "section")
-  ;;  ;; ("-q" "Paragraph (as a quote)" "quote")
-  ;;  ;; ("-s" "Source block" "src")
-  ;;  ]
-  ["Org actions"
-   :if readable--org-mode-p
-   ("i" "Insert to Org" "org" readable-peek--insert-org-action)]
-  ;; ["Actions"
-  ;;  [("r" "Read or archive" readable-peek--read-action)
-  ;;   ("C-w" "Copy thing" readable-peek--copy-action)
-  ;;   ("C-b" "Browse in external browser" readable-peek--browse-action)]]
+  ["Transformation: "
+   ("-d" "Document or URL" "--document")
+   ("-h" "Section (as a quote)" "--section")
+   ("-q" "Paragraph (as a quote)" "--quote")
+   ("-s" "Source block" "--src")
+   ("-t" "Table of contents" "--toc")]
+  ["Output: "
+   ("=o" "Format in Org" "--format-org")
+   ("=m" "Format in Markdown" "--format-markdown")
+   ("=k" "Copy to kill ring" "--kill-ring")
+   ("=c" "Copy to clipboard" "--clipboard")
+   ;; ("=x" "X window" "--x-window")
+   ;; ("=b" "Browser" "--browser")
+   ]
+  ["Action: "
+   [("d" readable-peek:debug)
+    ;; ("i" readable-peek:insert-dwim)
+    ;; ("r" readable-peek:archive)
+    ;; ("C-k" readable-peek:copy)
+    ;; ("C-b" readable-peek:browse-url)
+    ]]
   (interactive (list (or readable-current-document
                          (readable--document-at-point)
                          (readable--last-added-document)
@@ -138,37 +146,60 @@ of the heading, if it has an id attribute."
   (setq readable-current-document document)
   (transient-setup 'readable-peek))
 
-(transient-define-argument readable-peek:document ()
-  :description "Document or URL"
-  :class 'transient-option
-  :shortarg "-m"
-  :argument "--message=")
-
-(defun readable-peek-arguments ()
-  (transient-args 'readable-peek))
-
 (defun readable--org-mode-p ()
   (derived-mode-p 'org-mode))
 
-(defun readable-peek--insert-org-action (url args)
-  (interactive (list readable-current-document
-                     (transient-args 'readable-peek)))
-  (message "%s: %s" url args x))
+(defun readable-peek--interactive ()
+  (list readable-current-document
+        (transient-args 'readable-peek)))
 
-(defun readable-peek--read-action (url args)
-  (interactive (list readable-current-document
-                     (transient-args 'readable-peek)))
-  (message "%s: %s" url args x))
+(defun readable-peek--args-as-plist ()
+  (let (result)
+    (dolist (arg (transient-args 'readable-peek))
+      (cond
+       ((member arg '("--document" "--section" "--quote" "--src" "--toc"))
+        (push (list :transformation arg)
+              result))
+       ((member arg '("--format-org" "--format-markdown"))
+        (push (list :format arg)
+              result))
+       ((member arg '("--kill-ring" "--clipboard"))
+        (push (list :copy arg)
+              result))))
+    (-flatten-n 1 result)))
 
-(defun readable-peek--copy-action (url args)
+(transient-define-suffix readable-peek:debug (document plist)
+  ;; :if 'readable--org-mode-p
+  :description
+  (lambda ()
+    (cond
+     ((derived-mode-p 'org-mode)
+      "Insert to Org")
+     ((derived-mode-p 'markdown-mode)
+      "Insert to Markdown")
+     (t
+      "Insert literally")))
   (interactive (list readable-current-document
-                     (transient-args 'readable-peek)))
-  (message "%s: %s" url args x))
+                     (readable-peek--args-as-plist)))
+  (message "%s: %s" (oref readable-current-document url) plist))
 
-(defun readable-peek--browse-action (url args)
+(transient-define-suffix readable-peek:archive (document args)
+  :description "Archive to file"
   (interactive (list readable-current-document
                      (transient-args 'readable-peek)))
-  (message "%s: %s" url args x))
+  (message "%s: %s" (oref readable-current-document url) args))
+
+(transient-define-suffix readable-peek:copy (document args)
+  :description "Copy"
+  (interactive (list readable-current-document
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" (oref readable-current-document url) args))
+
+(transient-define-suffix readable-peek:browse-url (document args)
+  :description "Browse url"
+  (interactive (list readable-current-document
+                     (transient-args 'readable-peek)))
+  (message "%s: %s" (oref readable-current-document url) args))
 
 ;; (readable-peek "https://reddit.com")
 
