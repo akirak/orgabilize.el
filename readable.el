@@ -50,6 +50,12 @@
            url (oref (readable-document-for-url url) title))))
 
 ;;;###autoload
+(defun readable-make-org-link (url)
+  "Make a link string for URL."
+  (interactive "sUrl: ")
+  (org-link-make-string url (oref (readable-document-for-url url) title)))
+
+;;;###autoload
 (cl-defun readable-insert-org-toc (url &key include-header with-link)
   "Insert the table of contents of a web page into Org.
 
