@@ -65,7 +65,7 @@
 (defun readable--log-url (url &rest args)
   "Log URL and ARGS to a file with the current timestamp."
   (let ((entry `(,@args :url ,url
-                        :time ,(readable--format-iso-8601 (current-time)))))
+                        :time ,(format-time-string "%FT%X" (current-time)))))
     (readable-log-plist entry readable-fetch-log-file)))
 
 (defun readable-origin-source (url)
