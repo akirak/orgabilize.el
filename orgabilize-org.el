@@ -167,6 +167,10 @@ The argument should be an HTML dom as parsed using
                            ;; Tags that are just ignored
                            ((span time abbr figcaption)
                             (apply #'append (mapcar #'go-inline children)))
+                           (svg
+                            (message "Warning: %s element is ignored"
+                                     tag)
+                            nil)
                            (otherwise
                             (error "Unsupported tag %s in go-inline (with children %s)"
                                    tag children))))
