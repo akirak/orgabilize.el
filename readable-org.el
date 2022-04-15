@@ -139,6 +139,12 @@ The argument should be an HTML dom as parsed using
                             (org-ml-build-code (text-content children)))
                            (br
                             "\n")
+                           ;; There are situations where a list element contains
+                           ;; a pre element. It is a valid HTML, but it is
+                           ;; impossible for an Org list to contain a source
+                           ;; block. For now, it is turned into an inline code.
+                           (pre
+                            (org-ml-build-code (text-content children)))
                            ;; Tags that are just ignored
                            ((span time abbr figcaption)
                             (go-inline children))
