@@ -102,7 +102,7 @@ The argument should be an HTML dom as parsed using
               (-map (lambda (node)
                       (pcase node
                         (`(,tag ,attrs . ,children)
-                         (cl-ecase tag
+                         (cl-case tag
                            (a
                             (if (equal children '("#"))
                                 nil
@@ -141,7 +141,10 @@ The argument should be an HTML dom as parsed using
                             "\n")
                            ;; Tags that are just ignored
                            ((span time abbr figcaption)
-                            (go-inline children))))
+                            (go-inline children))
+                           (otherwise
+                            (error "Unsupported tag %s in go-inline (with children %s)"
+                                   tag children))))
                         ((pred stringp)
                          node))))
               ;; Unwrap lists that are not org elements
