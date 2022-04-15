@@ -29,6 +29,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'org-ml)
 (require 'readable-document)
 
@@ -46,7 +47,7 @@ This is used to prevent Org elements from flattening."
   "Wrap ELEMENT in a `readable-org-branch'."
   (make-readable-org-branch :element element))
 
-(defgeneric readable-org-unwrap (x)
+(cl-defgeneric readable-org-unwrap (x)
   "Unwrap a surrouding structure of X, if any."
   (readable-org-branch-element x))
 (cl-defmethod readable-org-unwrap ((x readable-org-branch))
@@ -357,7 +358,8 @@ which takes the title of the web page and returns a file name.
 
 If ALLOW-OVERWRITE is non-nil, it will overwrite the latest version
 if any."
-  (interactive "sUrl: ")
+  (interactive (list (read-string "URL: ")
+                     (read-file-name "Save to file: ")))
   (let* ((document (readable-document-for-url url))
          (outfile (cl-etypecase file
                     (string file)
