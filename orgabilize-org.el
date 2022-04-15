@@ -348,7 +348,7 @@ The argument should be an HTML dom as parsed using
   "Alternative representation for content below a heading."
   head-content subheadlines)
 
-(defun orgabilize-org--to-fragment (branches)
+(cl-defun orgabilize-org--to-fragment (branches &key url-without-fragment)
   "Transform BRANCHES into an `orgabilize-org-fragment'."
   (let* ((partitions (-partition-before-pred #'orgabilize-org-headline-p branches))
          (head-content (when (and (car partitions)
@@ -356,39 +356,46 @@ The argument should be an HTML dom as parsed using
                          (-map #'orgabilize-org-unwrap (car partitions)))))
     (cl-flet
         ((set-post-blank
-          (nodes)
-          (--map (org-ml-set-property :post-blank 1 it) nodes)))
+           (nodes)
+           (--map (org-ml-set-property :post-blank 1 it) nodes)))
       (make-orgabilize-org-fragment
        :head-content (set-post-blank head-content)
        :subheadlines
        (->> (if head-content
                 (cdr partitions)
               partitions)
-         (--map (let* ((h (car it))
-                       (children (-map #'orgabilize-org-unwrap (cdr it)))
-                       (drawer (when-let (id (orgabilize-org-headline-id h))
-                                 (->> (org-ml-build-node-property "CUSTOM_ID" id)
-                                   (org-ml-build-property-drawer)))))
-                  (->> (org-ml-build-headline!
-                        :level (orgabilize-org-headline-level h)
-                        :title-text (orgabilize-org-headline-text h)
-                        :post-blank 1
-                        :section-children
-                        (->> (if drawer
-                                 (cons drawer children)
-                               children)
-                          (set-post-blank)))))))))))
+            (--map (let* ((h (car it))
+                          (children (-map #'orgabilize-org-unwrap (cdr it)))
+                          (drawer (when-let (id (orgabilize-org-headline-id h))
+                                    (org-ml-build-property-drawer
+                                     (org-ml-build-node-property
+                                      "ORGABILIZE_ORIGIN_FRAGMENT_URL"
+                                      (concat url-without-fragment "#" id))
+                                     (org-ml-build-node-property
+                                      "CUSTOM_ID"
+                                      id)))))
+                     (->> (org-ml-build-headline!
+                           :level (orgabilize-org-headline-level h)
+                           :title-text (orgabilize-org-headline-text h)
+                           :post-blank 1
+                           :section-children
+                           (->> (if drawer
+                                    (cons drawer children)
+                                  children)
+                                (set-post-blank)))))))))))
 
 (cl-defun orgabilize-org--build-headline (dom &key title level tags
+                                              url-without-fragment
                                               src-language)
   "Build an Org headline from an html dom.
 
 DOM must be an html dom. It constructs an Org headline with TITLE
 at LEVEL, with optional TAGS."
   (declare (indent 1))
-  (let ((fragment (->> (orgabilize-org--parse-dom
-                        dom :src-language src-language)
-                       (orgabilize-org--to-fragment))))
+  (let ((fragment (-> (orgabilize-org--parse-dom
+                       dom :src-language src-language)
+                      (orgabilize-org--to-fragment
+                       :url-without-fragment url-without-fragment))))
     (apply #'org-ml-build-headline!
            :level level
            :title-text title
@@ -469,6 +476,7 @@ at LEVEL, with optional TAGS."
             :title title
             :tags '("fulltext")
             :level level
+            :url-without-fragment clean-url
             :src-language (when (and src-language
                                      (not (string-empty-p src-language)))
                             src-language))
