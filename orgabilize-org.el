@@ -1,10 +1,10 @@
-;;; readable-org.el --- Conversion from Html to Org -*- lexical-binding: t -*-
+;;; orgabilize-org.el --- Conversion from Html to Org -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Akira Komamura
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; URL: https://github.com/akirak/readable.el
+;; URL: https://github.com/akirak/orgabilize.el
 
 ;; This file is not part of GNU Emacs.
 
@@ -31,33 +31,33 @@
 
 (require 'cl-lib)
 (require 'org-ml)
-(require 'readable-document)
+(require 'orgabilize-document)
 
-(cl-defstruct readable-org-branch
+(cl-defstruct orgabilize-org-branch
   "Container for an Org branch.
 
 This is used to prevent Org elements from flattening."
   element)
 
-(cl-defstruct readable-org-headline
+(cl-defstruct orgabilize-org-headline
   "Org heading."
   level id text)
 
-(defsubst readable-org-wrap-branch (element)
-  "Wrap ELEMENT in a `readable-org-branch'."
-  (make-readable-org-branch :element element))
+(defsubst orgabilize-org-wrap-branch (element)
+  "Wrap ELEMENT in a `orgabilize-org-branch'."
+  (make-orgabilize-org-branch :element element))
 
-(cl-defgeneric readable-org-unwrap (x)
+(cl-defgeneric orgabilize-org-unwrap (x)
   "Unwrap a surrouding structure of X, if any."
-  (readable-org-branch-element x))
-(cl-defmethod readable-org-unwrap ((x readable-org-branch))
+  (orgabilize-org-branch-element x))
+(cl-defmethod orgabilize-org-unwrap ((x orgabilize-org-branch))
   "Unwrap a surrouding structure of X, if any."
-  (readable-org-branch-element x))
-(cl-defmethod readable-org-unwrap ((x string))
+  (orgabilize-org-branch-element x))
+(cl-defmethod orgabilize-org-unwrap ((x string))
   "Unwrap a surrouding structure of X, if any."
   x)
 
-(defun readable-org--parse-dom (dom)
+(defun orgabilize-org--parse-dom (dom)
   "Transform DOM into a sequence representing part of an Org document.
 
 The argument should be an HTML dom as parsed using
@@ -215,7 +215,7 @@ The argument should be an HTML dom as parsed using
               ((div main article)
                (-map #'go children))
               ((h1 h2 h3 h4 h5 h6)
-               (make-readable-org-headline :level (string-to-number
+               (make-orgabilize-org-headline :level (string-to-number
                                                    (string-remove-prefix
                                                     "h" (symbol-name tag)))
                                            :id (alist-get 'id attrs)
@@ -223,27 +223,27 @@ The argument should be an HTML dom as parsed using
               (p
                (when-let (ochildren (go-inline children))
                  (condition-case nil
-                     (readable-org-wrap-branch
+                     (orgabilize-org-wrap-branch
                       (->> (org-ml-build-paragraph)
                            (org-ml-set-children ochildren)))
                    (error (error "Error: %s" ochildren)))))
               ((ul ol)
-               (readable-org-wrap-branch
+               (orgabilize-org-wrap-branch
                 (go-list tag children)))
               (pre
                (pcase children
                  (`((code ,_ . ,content))
-                  (readable-org-wrap-branch
+                  (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
                     :value (text-content content))))
                  (_
-                  (readable-org-wrap-branch
+                  (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
                     :value (text-content children))))))
               (blockquote
-               (readable-org-wrap-branch
+               (orgabilize-org-wrap-branch
                 (->> (org-ml-build-quote-block)
-                     (org-ml-set-children (-map (-compose #'readable-org-unwrap
+                     (org-ml-set-children (-map (-compose #'orgabilize-org-unwrap
                                                           #'go)
                                                 children)))))
               (figure
@@ -259,18 +259,18 @@ The argument should be an HTML dom as parsed using
                                        (-map #'go))))
                  (if caption-text
                      (condition-case nil
-                         (cons (readable-org-wrap-branch
-                                (->> (readable-org-unwrap (car ochildren))
+                         (cons (orgabilize-org-wrap-branch
+                                (->> (orgabilize-org-unwrap (car ochildren))
                                      (org-ml-set-caption! caption-text)))
                                (cdr ochildren))
-                       (error (error "Error: %s" (readable-org-unwrap (car ochildren)))))
+                       (error (error "Error: %s" (orgabilize-org-unwrap (car ochildren)))))
                    ochildren)))
               (details
                (-let (((summaries rest) (--separate (pcase it
                                                       (`(,tag . ,_)
                                                        (eq tag 'summary)))
                                                     children)))
-                 (readable-org-wrap-branch
+                 (orgabilize-org-wrap-branch
                   (->> (org-ml-build-special-block
                         "details"
                         :name (when summaries
@@ -279,9 +279,9 @@ The argument should be an HTML dom as parsed using
                                                  (-flatten)
                                                  ;; I want to remove this
                                                  (-remove #'stringp)
-                                                 (-map #'readable-org-unwrap)))))))
+                                                 (-map #'orgabilize-org-unwrap)))))))
               (table
-               (readable-org-wrap-branch
+               (orgabilize-org-wrap-branch
                 (org-ml-build-special-block
                  "A table is supposed to be here, but I haven't supported it yet.")))
               (header
@@ -289,12 +289,12 @@ The argument should be an HTML dom as parsed using
                nil)
               ;; For inside a figure
               (img
-               (readable-org-wrap-branch
+               (orgabilize-org-wrap-branch
                 (->> (org-ml-build-paragraph)
                      (org-ml-set-children (go-inline (list x))))))
               (otherwise
                (when-let (ochildren (go-inline (list x)))
-                 (readable-org-wrap-branch
+                 (orgabilize-org-wrap-branch
                   (->> (org-ml-build-paragraph)
                        (org-ml-set-children ochildren)))))))
            ((pred stringp)
@@ -310,34 +310,34 @@ The argument should be an HTML dom as parsed using
                     (and (stringp s)
                          (string-match-p (rx bos (+ (any space "\n")) eos) s)))))))
 
-(cl-defstruct readable-org-fragment
+(cl-defstruct orgabilize-org-fragment
   "Alternative representation for content below a heading."
   head-content subheadlines)
 
-(defun readable-org--to-fragment (branches)
-  "Transform BRANCHES into an `readable-org-fragment'."
-  (let* ((partitions (-partition-before-pred #'readable-org-headline-p branches))
+(defun orgabilize-org--to-fragment (branches)
+  "Transform BRANCHES into an `orgabilize-org-fragment'."
+  (let* ((partitions (-partition-before-pred #'orgabilize-org-headline-p branches))
          (head-content (when (and (car partitions)
-                                  (not (readable-org-headline-p (caar partitions))))
-                         (-map #'readable-org-unwrap (car partitions)))))
+                                  (not (orgabilize-org-headline-p (caar partitions))))
+                         (-map #'orgabilize-org-unwrap (car partitions)))))
     (cl-flet
         ((set-post-blank
           (nodes)
           (--map (org-ml-set-property :post-blank 1 it) nodes)))
-      (make-readable-org-fragment
+      (make-orgabilize-org-fragment
        :head-content (set-post-blank head-content)
        :subheadlines
        (->> (if head-content
                 (cdr partitions)
               partitions)
          (--map (let* ((h (car it))
-                       (children (-map #'readable-org-unwrap (cdr it)))
-                       (drawer (when-let (id (readable-org-headline-id h))
+                       (children (-map #'orgabilize-org-unwrap (cdr it)))
+                       (drawer (when-let (id (orgabilize-org-headline-id h))
                                  (->> (org-ml-build-node-property "CUSTOM_ID" id)
                                    (org-ml-build-property-drawer)))))
                   (->> (org-ml-build-headline!
-                        :level (readable-org-headline-level h)
-                        :title-text (readable-org-headline-text h)
+                        :level (orgabilize-org-headline-level h)
+                        :title-text (orgabilize-org-headline-text h)
                         :post-blank 1
                         :section-children
                         (->> (if drawer
@@ -345,24 +345,24 @@ The argument should be an HTML dom as parsed using
                                children)
                           (set-post-blank)))))))))))
 
-(cl-defun readable-org--build-headline (dom &key title level tags)
+(cl-defun orgabilize-org--build-headline (dom &key title level tags)
   "Build an Org headline from an html dom.
 
 DOM must be an html dom. It constructs an Org headline with TITLE
 at LEVEL, with optional TAGS."
   (declare (indent 1))
-  (let ((fragment (->> (readable-org--parse-dom dom)
-                    (readable-org--to-fragment))))
+  (let ((fragment (->> (orgabilize-org--parse-dom dom)
+                       (orgabilize-org--to-fragment))))
     (apply #'org-ml-build-headline!
            :level level
            :title-text title
            :tags tags
            :pre-blank 1
-           :section-children (readable-org-fragment-head-content fragment)
-           (readable-org-fragment-subheadlines fragment))))
+           :section-children (orgabilize-org-fragment-head-content fragment)
+           (orgabilize-org-fragment-subheadlines fragment))))
 
 ;;;###autoload
-(cl-defun readable-save-to-org-file (url file &key allow-overwrite)
+(cl-defun orgabilize-save-to-org-file (url file &key allow-overwrite)
   "Save the html content of a web page to a file in Org.
 
 URL is the location of the web page.
@@ -374,7 +374,7 @@ If ALLOW-OVERWRITE is non-nil, it will overwrite the latest version
 if any."
   (interactive (list (read-string "URL: ")
                      (read-file-name "Save to file: ")))
-  (let* ((document (readable-document-for-url url))
+  (let* ((document (orgabilize-document-for-url url))
          (outfile (cl-etypecase file
                     (string file)
                     (function (funcall file title) )))
@@ -383,7 +383,7 @@ if any."
                              (yes-or-no-p (format "File %s already exists. Overwrite?"
                                                   (abbreviate-file-name outfile)))
                              (user-error "Aborted"))))
-         (dom (readable-document-dom document)))
+         (dom (orgabilize-document-dom document)))
     (with-current-buffer (create-file-buffer outfile)
       (org-ml-insert (point-min)
                      (org-ml-build-headline!
@@ -398,10 +398,10 @@ if any."
                                 (org-ml-build-special-block
                                  "excerpt"
                                  (org-ml-build-paragraph! excerpt))))))
-                      (readable-org--build-headline dom
-                        :title "Fulltext"
-                        :tags '("fulltext")
-                        :level 1)))
+                      (orgabilize-org--build-headline dom
+                                                      :title "Fulltext"
+                                                      :tags '("fulltext")
+                                                      :level 1)))
       (setq buffer-file-name outfile)
       (when overwrite
         (delete-file outfile))
@@ -413,5 +413,5 @@ if any."
           (pop-to-buffer-same-window (current-buffer))
         (current-buffer)))))
 
-(provide 'readable-org)
-;;; readable-org.el ends here
+(provide 'orgabilize-org)
+;;; orgabilize-org.el ends here

@@ -1,4 +1,4 @@
-* readable.el
+* orgabilize.el
 =readable= converts a web page into the Emacs Org mode format.
 It uses readability-cli as the backend.
 It is an alternative to org-web-tools (which uses pandoc for conversion) with an intent to produce a better output quality.

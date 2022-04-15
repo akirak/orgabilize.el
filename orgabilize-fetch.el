@@ -1,10 +1,10 @@
-;;; readable-fetch.el --- Downloading facility -*- lexical-binding: t -*-
+;;; orgabilize-fetch.el --- Downloading facility -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Akira Komamura
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; URL: https://github.com/akirak/readable.el
+;; URL: https://github.com/akirak/orgabilize.el
 
 ;; This file is not part of GNU Emacs.
 
@@ -36,18 +36,18 @@
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
 
-(defcustom readable-cache-directory
-  (expand-file-name "readable/cache" user-emacs-directory)
+(defcustom orgabilize-cache-directory
+  (expand-file-name "orgabilize/cache" user-emacs-directory)
   "Directory in which content cache are stored."
   :group 'readable
   :type 'directory)
 
-(defcustom readable-download-timeout 3
+(defcustom orgabilize-download-timeout 3
   "Timeout of HTTP requests in seconds."
   :group 'readable
   :type 'number)
 
-(defun readable--file-escape-url (url)
+(defun orgabilize--file-escape-url (url)
   "Return a path-safe string for URL."
   (let* ((obj (url-generic-parse-url url))
          (filename (url-filename obj))
@@ -60,23 +60,23 @@
                  (string-remove-suffix "/")
                  (replace-regexp-in-string "/" "_")
                  (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
-                 (readable--string-take 128))
+                 (orgabilize--string-take 128))
             "__"
-            (readable--string-take 10 (sha1 filename)))))
+            (orgabilize--string-take 10 (sha1 filename)))))
 
-(defun readable--html-cache-file (url)
+(defun orgabilize--html-cache-file (url)
   "Return the cache file name for URL in full path."
-  (expand-file-name (concat (readable--file-escape-url url)
+  (expand-file-name (concat (orgabilize--file-escape-url url)
                             ".html")
-                    readable-cache-directory))
+                    orgabilize-cache-directory))
 
-(defun readable-origin-source (url)
+(defun orgabilize-origin-source (url)
   "Return a file name that contains the original content of URL."
-  (let ((cache-file (readable--html-cache-file url)))
+  (let ((cache-file (orgabilize--html-cache-file url)))
     (unless (file-exists-p cache-file)
       (with-current-buffer (url-retrieve-synchronously
                             url t t
-                            readable-download-timeout)
+                            orgabilize-download-timeout)
         (when url-http-end-of-headers
           (delete-region (point-min) url-http-end-of-headers))
         (write-file cache-file)))
@@ -84,11 +84,11 @@
 
 ;;;; Utilities
 
-(defsubst readable--string-take (len string)
+(defsubst orgabilize--string-take (len string)
   "Take the first LEN characters of STRING."
   (if (> len (length string))
       string
     (substring string 0 len)))
 
-(provide 'readable-fetch)
-;;; readable-fetch.el ends here
+(provide 'orgabilize-fetch)
+;;; orgabilize-fetch.el ends here
