@@ -504,7 +504,7 @@ at LEVEL, with optional TAGS."
                   orgabilize-org-origin-url-property clean-url)))
           (org-ml-insert (point)))
         (goto-char start)
-        (org-show-entry))
+        (org-cycle '(16)))
       (if (or new-buffer
               (not (equal (sha1 (current-buffer))
                           orig-hash)))
