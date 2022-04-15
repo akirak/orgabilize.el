@@ -108,9 +108,11 @@ The argument should be an HTML dom as parsed using
        (language-from-class
          (class)
          (when class
-           (->> (split-string class "\n")
-                (-map #'string-trim)
-                (--filter (string-match-p "[[:alnum:]]" it))
+           (->> (split-string class "[[:space:]]+")
+                (cl-remove-if #'string-empty-p)
+                (--map (string-remove-prefix "language-" it))
+                (--map (string-remove-prefix "lang-" it))
+                (--filter (string-match-p "^[[:alnum:]]+$" it))
                 (-filter #'language-p)
                 (car))))
        (go-inline
@@ -250,15 +252,18 @@ The argument should be an HTML dom as parsed using
                 (go-list tag children)))
               (pre
                (pcase children
-                 (`((code ,_ . ,content))
+                 (`((code ,cattrs . ,content))
                   (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
-                    :language src-language
+                    :language (or (language-from-class (alist-get 'class attrs))
+                                  (language-from-class (alist-get 'class cattrs))
+                                  src-language)
                     :value (text-content content))))
                  (_
                   (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
-                    :language src-language
+                    :language (or (language-from-class (alist-get 'class attrs))
+                                  src-language)
                     :value (text-content children))))))
               (blockquote
                (orgabilize-org-wrap-branch
