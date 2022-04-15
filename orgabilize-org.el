@@ -242,11 +242,14 @@ The argument should be an HTML dom as parsed using
                                              :text (normalize-space (text-content children))))
               (p
                (when-let (ochildren (go-inline children))
-                 (condition-case nil
+                 (condition-case err
                      (orgabilize-org-wrap-branch
                       (->> (org-ml-build-paragraph)
                            (org-ml-set-children ochildren)))
-                   (error (error "Error: %s" ochildren)))))
+                   (error (error "Error while processing p:\n%s:\n%s"
+                                 (string-join (--map (format "%s" it) ochildren)
+                                              "\n")
+                                 err)))))
               ((ul ol)
                (orgabilize-org-wrap-branch
                 (go-list tag children)))
@@ -323,7 +326,9 @@ The argument should be an HTML dom as parsed using
                   (->> (org-ml-build-paragraph)
                        (org-ml-set-children ochildren)))))))
            ((pred stringp)
-            x))))
+            x)
+           (_
+            (error "Unsupported block content: %s" x)))))
     (->> dom
          ;; take the children of html
          (cddr)
