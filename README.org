@@ -1,57 +1,17 @@
 * orgabilize.el
-=readable= converts a web page into the Emacs Org mode format.
-It uses readability-cli as the backend.
-It is an alternative to org-web-tools (which uses pandoc for conversion) with an intent to produce a better output quality.
-
-# Add CI badges here
-
-#+BEGIN_HTML
-#+END_HTML
-** Table of contents
-:PROPERTIES:
-:TOC: siblings
-:END:
+Orgabilize (org + readable + ize) converts a web page into the Emacs Org mode format.
+It uses [[https://gitlab.com/gardenappl/readability-cli][readability-cli]] as the backend.
+It is an alternative to [[https://github.com/alphapapa/org-web-tools][org-web-tools]] (which uses pandoc for conversion).
 ** Installation
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:14]
-:END:
-*** Installing readability-cli
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:14]
-:END:
-
-You can install =readability-cli= package from npm globally.
-Alternatively for Nix users, I have a Nix derivation in my NUR repository:
-
+Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
 ** Configuration
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:17]
-:END:
 ** Usage
 :PROPERTIES:
 :CREATED_TIME: [2021-04-11 Sun 13:14]
 :END:
 *** Inserting a link
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:18]
-:END:
-*** Reading in a temporary buffer
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:17]
-:END:
-*** Inserting a particular section into the current Org buffer
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:16]
-:END:
+Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its title.
+*** Inserting a table of contents
+Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
 *** Archiving to a directory
-:PROPERTIES:
-:CREATED_TIME: [2021-04-11 Sun 13:16]
-:END:
-** COMMENT Meta :noexport:
-:PROPERTIES:
-:TOC:      ignore
-:END:
-# The COMMENT keyword prevents GitHub's renderer from showing this entry.
-# Local Variables:
-# eval: (when (require (quote org-make-toc) nil t) (org-make-toc-mode t))
-# End:
+Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
