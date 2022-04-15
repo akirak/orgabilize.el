@@ -42,7 +42,7 @@
   :group 'readable
   :type 'file)
 
-(defcustom orgabilize-args nil
+(defcustom orgabilize-args '("--keep-classes")
   "List of command line arguments passed to readability-cli."
   :group 'readable
   :type '(repeat string))
