@@ -31,10 +31,6 @@
 
 (require 'url-http)
 (require 'subr-x)
-(require 'dash)
-
-(require 'readable-utils)
-(require 'readable-log)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
@@ -50,45 +46,58 @@
   :group 'readable
   :type 'number)
 
-(defcustom readable-fetch-log-file
-  (expand-file-name "readable/fetch.log" user-emacs-directory)
-  "Path to a file to which fetched URLs are recorded."
-  :group 'readable
-  :type 'file)
+(defconst readable-url-regexp-for-escaping
+  "Regexp pattern for URLs."
+  (rx bol (+ (any "+" alnum)) ":" (* (any "/"))
+      ;; hostname
+      (group (+ (not (any "/"))))
+      ;; path
+      (group (* (not (any "?#"))))
+      ;; query
+      (? (group "?" (* (not (any "#")))))))
+
+(defun readable--file-escape-url (url)
+  "Return a path-safe string for URL."
+  (save-match-data
+    (if (string-match readable-url-regexp-for-escaping url)
+        (concat (->> (match-string 1 url)
+                     (replace-regexp-in-string (rx ".") "_"))
+                "_"
+                (->> (match-string 2 url)
+                     (string-remove-suffix "/")
+                     (replace-regexp-in-string "/" "_")
+                     (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
+                     (readable--string-take 128))
+                "__"
+                (readable--string-take
+                 10 (sha1 (match-string 0 url))))
+      (error "Did not match the URL pattern: %s" url))))
 
 (defun readable--html-cache-file (url)
   "Return the cache file name for URL in full path."
-  (expand-file-name (concat (readable--file-escape-url-1 url)
+  (expand-file-name (concat (readable--file-escape-url url)
                             ".html")
                     readable-cache-directory))
 
-(defun readable--log-url (url &rest args)
-  "Log URL and ARGS to a file with the current timestamp."
-  (let ((entry `(,@args :url ,url
-                        :time ,(format-time-string "%FT%X" (current-time)))))
-    (readable-log-plist entry readable-fetch-log-file)))
-
 (defun readable-origin-source (url)
   "Return a file name that contains the original content of URL."
-  (let ((cache-file (readable--html-cache-file url))
-        (start-time (float-time)))
+  (let ((cache-file (readable--html-cache-file url)))
     (unless (file-exists-p cache-file)
-      (condition-case _
-          (with-current-buffer (url-retrieve-synchronously
-                                url t t
-                                readable-download-timeout)
-            (when url-http-end-of-headers
-              (delete-region (point-min) url-http-end-of-headers))
-            (unless (file-directory-p (file-name-directory cache-file))
-              (make-directory (file-name-directory cache-file) t))
-            (readable--log-url url
-                               :size (buffer-size)
-                               :duration (- (float-time) start-time))
-            (write-file cache-file))
-        (error (readable--log-url url :failed t
-                                  :duration (- (float-time) start-time))))
-      (readable--log-url url :cache t))
+      (with-current-buffer (url-retrieve-synchronously
+                            url t t
+                            readable-download-timeout)
+        (when url-http-end-of-headers
+          (delete-region (point-min) url-http-end-of-headers))
+        (write-file cache-file)))
     cache-file))
+
+;;;; Utilities
+
+(defsubst readable--string-take (len string)
+  "Take the first LEN characters of STRING."
+  (if (> len (length string))
+      string
+    (substring string 0 len)))
 
 (provide 'readable-fetch)
 ;;; readable-fetch.el ends here

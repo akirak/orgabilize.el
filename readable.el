@@ -45,15 +45,8 @@
 (defun readable-insert-org-link (url)
   "Insert an Org link for URL."
   (interactive "sUrl: ")
-  (derived-mode-p 'org-mode)
   (insert (org-link-make-string
            url (oref (readable-document-for-url url) title))))
-
-;;;###autoload
-(defun readable-make-org-link (url)
-  "Make a link string for URL."
-  (interactive "sUrl: ")
-  (org-link-make-string url (oref (readable-document-for-url url) title)))
 
 ;;;###autoload
 (cl-defun readable-insert-org-toc (url &key include-header with-link)
@@ -68,7 +61,6 @@ If WITH-LINK is non-nil, each item will be linked to the source
 of the heading, if it has an id attribute."
   (interactive (list (read-string "Url: ")
                      :with-link current-prefix-arg))
-  (derived-mode-p 'org-mode)
   (insert (mapconcat (lambda (x)
                        (let ((level (readable-toc-item-level x))
                              (text (readable-toc-item-text x))
@@ -90,8 +82,7 @@ of the heading, if it has an id attribute."
   "Read URL in a non-file shr buffer."
   (interactive "sUrl: ")
   (let* ((document (readable-document-for-url url))
-         (buffer-name (generate-new-buffer-name (format "*readable shr %s*"
-                                                        (oref document title))))
+         (buffer-name (generate-new-buffer-name (format "*readable shr %s*" title)))
          (out-buffer (generate-new-buffer buffer-name)))
     (with-current-buffer out-buffer
       (insert "<h1>" (oref document title) "</h1>\n"
