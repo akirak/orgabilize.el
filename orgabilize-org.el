@@ -87,13 +87,16 @@ The argument should be an HTML dom as parsed using
               (--tree-map-nodes (pcase it
                                   ((and `(,_ . ,value)
                                         (guard (not (listp value))))
+                                   t)
+                                  (`(br . ,_)
                                    t))
-                                nil)
+                                (pcase it
+                                  (`(br . ,_)
+                                   "\n")
+                                  (_
+                                   it)))
               (--tree-reduce-from (if (and (stringp it)
-                                           ;; Sharp is often used as an
-                                           ;; anchor, which should be
-                                           ;; stripped from the output.
-                                           (not (string-equal it "#")))
+                                           (not (equal "#" it)))
                                       (concat it acc)
                                     acc)
                                   "")))
