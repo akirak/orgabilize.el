@@ -129,6 +129,12 @@ The argument should be an HTML dom as parsed using
                            ((strong b)
                             (->> (org-ml-build-bold)
                                  (org-ml-set-children (go-inline children))))
+                           (sup
+                            (->> (org-ml-build-superscript)
+                                 (org-ml-set-children (go-inline children))))
+                           (sub
+                            (->> (org-ml-build-subscript)
+                                 (org-ml-set-children (go-inline children))))
                            (code
                             (org-ml-build-code (text-content children)))
                            (br
