@@ -1,0 +1,17 @@
+* orgabilize.el
+Orgabilize (org + readable + ize) converts a web page into the Emacs Org mode format.
+It uses [[https://gitlab.com/gardenappl/readability-cli][readability-cli]] as the backend.
+It is an alternative to [[https://github.com/alphapapa/org-web-tools][org-web-tools]] (which uses pandoc for conversion).
+** Installation
+Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
+** Configuration
+** Usage
+:PROPERTIES:
+:CREATED_TIME: [2021-04-11 Sun 13:14]
+:END:
+*** Inserting a link
+Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its title.
+*** Inserting a table of contents
+Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
+*** Archiving to a directory
+Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
