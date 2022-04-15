@@ -115,83 +115,95 @@ The argument should be an HTML dom as parsed using
                 (--filter (string-match-p "^[[:alnum:]]+$" it))
                 (-filter #'language-p)
                 (car))))
+       (unwrap-inlines
+         (children)
+         (->> (-flatten children)
+              (delq nil)
+              (-map #'orgabilize-org-unwrap)))
+       (go-inline-node
+         (node)
+         (pcase node
+           (`(,tag ,attrs . ,children)
+            (cl-case tag
+              (a
+               (if (equal children '("#"))
+                   nil
+                 (if-let (href (alist-get 'href attrs))
+                     (->> (org-ml-build-link href)
+                          (org-ml-set-children (unwrap-inlines (go-inline children)))
+                          (orgabilize-org-wrap-branch))
+                   (go-inline children))))
+              (img
+               ;; TODO: Download images using org-download
+               (orgabilize-org-wrap-branch
+                (org-ml-build-link (alist-get 'src attrs))))
+              (i
+               ;; i tag is often used without a content for
+               ;; building an icon, so it is important to
+               ;; check if it is not an empty element.
+               ;;
+               ;; Maybe we should print the class if it is an
+               ;; empty element...
+               (when-let (ochildren (go-inline children))
+                 (->> (org-ml-build-italic)
+                      (org-ml-set-children (unwrap-inlines ochildren))
+                      (orgabilize-org-wrap-branch))))
+              ((em cite)
+               (->> (org-ml-build-italic)
+                    (org-ml-set-children (unwrap-inlines (go-inline children)))
+                    (orgabilize-org-wrap-branch)))
+              ((strong b)
+               (->> (org-ml-build-bold)
+                    (org-ml-set-children (unwrap-inlines (go-inline children)))
+                    (orgabilize-org-wrap-branch)))
+              (sup
+               (->> (org-ml-build-superscript)
+                    (org-ml-set-children (unwrap-inlines (go-inline children)))
+                    (orgabilize-org-wrap-branch)))
+              (sub
+               (->> (org-ml-build-subscript)
+                    (org-ml-set-children (unwrap-inlines (go-inline children)))
+                    (orgabilize-org-wrap-branch)))
+              (code
+               (orgabilize-org-wrap-branch
+                (org-ml-build-code (text-content children))))
+              (br
+               "\n")
+              ;; There are situations where a list element contains
+              ;; a pre element. It is a valid HTML, but it is
+              ;; impossible for an Org list to contain a source
+              ;; block. For now, it is turned into an inline code.
+              (pre
+               (orgabilize-org-wrap-branch
+                (org-ml-build-code (text-content children))))
+              ;; Tags that are just ignored
+              ((span time abbr figcaption)
+               (-flatten (mapcar #'go-inline children)))
+              (svg
+               (message "Warning: %s element is ignored"
+                        tag)
+               nil)
+              (otherwise
+               (error "Unsupported tag %s in go-inline (with children %s)"
+                      tag children))))
+           ((pred stringp)
+            (normalize-space node))))
        (go-inline
          (nodes)
-         (->> nodes
-              (-map (lambda (node)
-                      (pcase node
-                        (`(,tag ,attrs . ,children)
-                         (cl-case tag
-                           (a
-                            (if (equal children '("#"))
-                                nil
-                              (if-let (href (alist-get 'href attrs))
-                                  (->> (org-ml-build-link href)
-                                       (org-ml-set-children (go-inline children)))
-                                (go-inline children))))
-                           (img
-                            ;; TODO: Download images using org-download
-                            (org-ml-build-link (alist-get 'src attrs)))
-                           (i
-                            ;; i tag is often used without a content for
-                            ;; building an icon, so it is important to
-                            ;; check if it is not an empty element.
-                            ;;
-                            ;; Maybe we should print the class if it is an
-                            ;; empty element...
-                            (when-let (ochildren (go-inline children))
-                              (->> (org-ml-build-italic)
-                                   (org-ml-set-children ochildren))))
-                           ((em cite)
-                            (->> (org-ml-build-italic)
-                                 (org-ml-set-children (go-inline children))))
-                           ((strong b)
-                            (->> (org-ml-build-bold)
-                                 (org-ml-set-children (go-inline children))))
-                           (sup
-                            (->> (org-ml-build-superscript)
-                                 (org-ml-set-children (go-inline children))))
-                           (sub
-                            (->> (org-ml-build-subscript)
-                                 (org-ml-set-children (go-inline children))))
-                           (code
-                            (org-ml-build-code (text-content children)))
-                           (br
-                            "\n")
-                           ;; There are situations where a list element contains
-                           ;; a pre element. It is a valid HTML, but it is
-                           ;; impossible for an Org list to contain a source
-                           ;; block. For now, it is turned into an inline code.
-                           (pre
-                            (org-ml-build-code (text-content children)))
-                           ;; Tags that are just ignored
-                           ((span time abbr figcaption)
-                            (apply #'append (mapcar #'go-inline children)))
-                           (svg
-                            (message "Warning: %s element is ignored"
-                                     tag)
-                            nil)
-                           (otherwise
-                            (error "Unsupported tag %s in go-inline (with children %s)"
-                                   tag children))))
-                        ((pred stringp)
-                         (normalize-space node)))))
-              ;; Unwrap lists that are not org elements
-              (-map (lambda (tree)
-                      (--tree-map-nodes (and (listp it)
-                                             (-all-p #'stringp it))
-                                        (apply #'concat it)
-                                        tree)))
-              ;; You can't flatten org-ml structs!
-              (-non-nil)))
+         (cond
+          ((and nodes
+                (listp nodes)
+                (symbolp (car nodes)))
+           (list (go-inline-node nodes)))
+          ((stringp nodes)
+           (list nodes))
+          (t
+           (-map #'go-inline-node nodes))))
        (non-nil-if-list
          (x)
          (if (listp x)
              (-non-nil x)
            x))
-       (inline-leaf
-         (nodes)
-         (vector 'inline (go-inline nodes)))
        (go-list
          (tag items)
          (let ((bullet (when (eq tag 'ol)
@@ -218,7 +230,8 @@ The argument should be an HTML dom as parsed using
        (go-item
          (bullet item)
          (-let* (((paragraph-content children) (-split-with (-not #'list-p) item))
-                 (paragraph (when-let (oparagraph (go-inline paragraph-content))
+                 (paragraph (when-let (oparagraph (unwrap-inlines
+                                                   (go-inline paragraph-content)))
                               (->> (org-ml-build-paragraph)
                                    (org-ml-set-children oparagraph))))
                  (ochildren (->> children
@@ -245,7 +258,8 @@ The argument should be an HTML dom as parsed using
                                              :id (alist-get 'id attrs)
                                              :text (normalize-space (text-content children))))
               (p
-               (when-let (ochildren (go-inline children))
+               (when-let (ochildren (unwrap-inlines
+                                     (go-inline children)))
                  (condition-case err
                      (orgabilize-org-wrap-branch
                       (->> (org-ml-build-paragraph)
@@ -323,9 +337,11 @@ The argument should be an HTML dom as parsed using
               (img
                (orgabilize-org-wrap-branch
                 (->> (org-ml-build-paragraph)
-                     (org-ml-set-children (go-inline (list x))))))
+                     (org-ml-set-children (unwrap-inlines
+                                           (go-inline (list x)))))))
               (otherwise
-               (when-let (ochildren (go-inline (list x)))
+               (when-let (ochildren (unwrap-inlines
+                                     (go-inline (list x))))
                  (orgabilize-org-wrap-branch
                   (->> (org-ml-build-paragraph)
                        (org-ml-set-children ochildren)))))))
