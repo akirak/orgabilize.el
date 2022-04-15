@@ -64,237 +64,237 @@ The argument should be an HTML dom as parsed using
 `libxml-parse-html-region'."
   (cl-labels
       ((text-content
-        (nodes)
-        (->> nodes
-          (--tree-map-nodes (pcase it
-                              ((and `(,_ . ,value)
-                                    (guard (not (listp value))))
-                               t))
-                            nil)
-          (--tree-reduce-from (if (and (stringp it)
-                                       ;; Sharp is often used as an
-                                       ;; anchor, which should be
-                                       ;; stripped from the output.
-                                       (not (string-equal it "#")))
-                                  (concat it acc)
-                                acc)
-                              "")))
+         (nodes)
+         (->> nodes
+              (--tree-map-nodes (pcase it
+                                  ((and `(,_ . ,value)
+                                        (guard (not (listp value))))
+                                   t))
+                                nil)
+              (--tree-reduce-from (if (and (stringp it)
+                                           ;; Sharp is often used as an
+                                           ;; anchor, which should be
+                                           ;; stripped from the output.
+                                           (not (string-equal it "#")))
+                                      (concat it acc)
+                                    acc)
+                                  "")))
        (normalize-space
-        (str)
-        (->> str
-          (replace-regexp-in-string (rx (+ (any space "\n"))) " ")
-          (string-trim)))
+         (str)
+         (->> str
+              (replace-regexp-in-string (rx (+ (any space "\n"))) " ")
+              (string-trim)))
        (language-p
-        (name)
-        (when-let (mode (intern-soft (concat name "-mode")))
-          (commandp mode)))
+         (name)
+         (when-let (mode (intern-soft (concat name "-mode")))
+           (commandp mode)))
        (language-from-class
-        (class)
-        (when class
-          (->> (split-string class "\n")
-            (-map #'string-trim)
-            (--filter (string-match-p "[[:alnum:]]" it))
-            (-filter #'language-p)
-            (car))))
+         (class)
+         (when class
+           (->> (split-string class "\n")
+                (-map #'string-trim)
+                (--filter (string-match-p "[[:alnum:]]" it))
+                (-filter #'language-p)
+                (car))))
        (go-inline
-        (nodes)
-        (->> nodes
-          (-map (lambda (node)
-                  (pcase node
-                    (`(,tag ,attrs . ,children)
-                     (cl-ecase tag
-                       (a
-                        (if (equal children '("#"))
-                            nil
-                          (if-let (href (alist-get 'href attrs))
-                              (->> (org-ml-build-link href)
-                                (org-ml-set-children (go-inline children)))
+         (nodes)
+         (->> nodes
+              (-map (lambda (node)
+                      (pcase node
+                        (`(,tag ,attrs . ,children)
+                         (cl-ecase tag
+                           (a
+                            (if (equal children '("#"))
+                                nil
+                              (if-let (href (alist-get 'href attrs))
+                                  (->> (org-ml-build-link href)
+                                       (org-ml-set-children (go-inline children)))
+                                (go-inline children))))
+                           (img
+                            ;; TODO: Download images using org-download
+                            (org-ml-build-link (alist-get 'src attrs)))
+                           (i
+                            ;; i tag is often used without a content for
+                            ;; building an icon, so it is important to
+                            ;; check if it is not an empty element.
+                            ;;
+                            ;; Maybe we should print the class if it is an
+                            ;; empty element...
+                            (when-let (ochildren (go-inline children))
+                              (->> (org-ml-build-italic)
+                                   (org-ml-set-children ochildren))))
+                           ((em cite)
+                            (->> (org-ml-build-italic)
+                                 (org-ml-set-children (go-inline children))))
+                           ((strong b)
+                            (->> (org-ml-build-bold)
+                                 (org-ml-set-children (go-inline children))))
+                           (code
+                            (org-ml-build-code (text-content children)))
+                           (br
+                            "\n")
+                           ;; Tags that are just ignored
+                           ((span time abbr figcaption)
                             (go-inline children))))
-                       (img
-                        ;; TODO: Download images using org-download
-                        (org-ml-build-link (alist-get 'src attrs)))
-                       (i
-                        ;; i tag is often used without a content for
-                        ;; building an icon, so it is important to
-                        ;; check if it is not an empty element.
-                        ;;
-                        ;; Maybe we should print the class if it is an
-                        ;; empty element...
-                        (when-let (ochildren (go-inline children))
-                          (->> (org-ml-build-italic)
-                            (org-ml-set-children ochildren))))
-                       ((em cite)
-                        (->> (org-ml-build-italic)
-                          (org-ml-set-children (go-inline children))))
-                       ((strong b)
-                        (->> (org-ml-build-bold)
-                          (org-ml-set-children (go-inline children))))
-                       (code
-                        (org-ml-build-code (text-content children)))
-                       (br
-                        "\n")
-                       ;; Tags that are just ignored
-                       ((span time abbr figcaption)
-                        (go-inline children))))
-                    ((pred stringp)
-                     node))))
-          ;; Unwrap lists that are not org elements
-          (-map (lambda (tree)
-                  (--tree-map-nodes (and (listp it)
-                                         (-all-p #'stringp it))
-                                    (apply #'concat it)
-                                    tree)))
-          ;; You can't flatten org-ml structs!
-          (-non-nil)))
+                        ((pred stringp)
+                         node))))
+              ;; Unwrap lists that are not org elements
+              (-map (lambda (tree)
+                      (--tree-map-nodes (and (listp it)
+                                             (-all-p #'stringp it))
+                                        (apply #'concat it)
+                                        tree)))
+              ;; You can't flatten org-ml structs!
+              (-non-nil)))
        (non-nil-if-list
-        (x)
-        (if (listp x)
-            (-non-nil x)
-          x))
+         (x)
+         (if (listp x)
+             (-non-nil x)
+           x))
        (inline-leaf
-        (nodes)
-        (vector 'inline (go-inline nodes)))
+         (nodes)
+         (vector 'inline (go-inline nodes)))
        (go-list
-        (tag items)
-        (let ((bullet (when (eq tag 'ol)
-                        (make-symbol "bullet"))))
-          (when bullet
-            (set bullet 0))
-          (->> (org-ml-build-plain-list)
-            (org-ml-set-children
-             (->> items
-               (-map (lambda (child)
-                       (pcase child
-                         (`(li ,_ . ,content)
-                          content))))
-               (-non-nil)
-               (-map (lambda (item)
-                       (go-item (if bullet
-                                    (cl-incf (symbol-value bullet))
-                                  '-)
-                                item))))))))
+         (tag items)
+         (let ((bullet (when (eq tag 'ol)
+                         (make-symbol "bullet"))))
+           (when bullet
+             (set bullet 0))
+           (->> (org-ml-build-plain-list)
+                (org-ml-set-children
+                 (->> items
+                      (-map (lambda (child)
+                              (pcase child
+                                (`(li ,_ . ,content)
+                                 content))))
+                      (-non-nil)
+                      (-map (lambda (item)
+                              (go-item (if bullet
+                                           (cl-incf (symbol-value bullet))
+                                         '-)
+                                       item))))))))
        (list-p
-        (x)
-        (and (listp x)
-             (memq (car x) '(ul ol))))
+         (x)
+         (and (listp x)
+              (memq (car x) '(ul ol))))
        (go-item
-        (bullet item)
-        (-let* (((paragraph-content children) (-split-with (-not #'list-p) item))
-                (paragraph (when-let (oparagraph (go-inline paragraph-content))
-                             (->> (org-ml-build-paragraph)
-                               (org-ml-set-children oparagraph))))
-                (ochildren (->> children
-                             (-filter #'list-p)
-                             (--map (go-list (car it) (cddr it))))))
-          (apply #'org-ml-build-item
-                 :bullet bullet
-                 (if paragraph
-                     (cons paragraph ochildren)
-                   ochildren))))
+         (bullet item)
+         (-let* (((paragraph-content children) (-split-with (-not #'list-p) item))
+                 (paragraph (when-let (oparagraph (go-inline paragraph-content))
+                              (->> (org-ml-build-paragraph)
+                                   (org-ml-set-children oparagraph))))
+                 (ochildren (->> children
+                                 (-filter #'list-p)
+                                 (--map (go-list (car it) (cddr it))))))
+           (apply #'org-ml-build-item
+                  :bullet bullet
+                  (if paragraph
+                      (cons paragraph ochildren)
+                    ochildren))))
        ;; Handle both flow contents and block elements. This doesn't
        ;; strictly follow the model of HTML.
        (go
-        (x)
-        (pcase x
-          (`(,tag ,attrs . ,children)
-           (cl-case tag
-             ((div main article)
-              (-map #'go children))
-             ((h1 h2 h3 h4 h5 h6)
-              (make-readable-org-headline :level (string-to-number
-                                                  (string-remove-prefix
-                                                   "h" (symbol-name tag)))
-                                          :id (alist-get 'id attrs)
-                                          :text (normalize-space (text-content children))))
-             (p
-              (when-let (ochildren (go-inline children))
-                (condition-case nil
-                    (readable-org-wrap-branch
-                     (->> (org-ml-build-paragraph)
-                       (org-ml-set-children ochildren)))
-                  (error (error "Error: %s" ochildren)))))
-             ((ul ol)
-              (readable-org-wrap-branch
-               (go-list tag children)))
-             (pre
-              (pcase children
-                (`((code ,_ . ,content))
+         (x)
+         (pcase x
+           (`(,tag ,attrs . ,children)
+            (cl-case tag
+              ((div main article)
+               (-map #'go children))
+              ((h1 h2 h3 h4 h5 h6)
+               (make-readable-org-headline :level (string-to-number
+                                                   (string-remove-prefix
+                                                    "h" (symbol-name tag)))
+                                           :id (alist-get 'id attrs)
+                                           :text (normalize-space (text-content children))))
+              (p
+               (when-let (ochildren (go-inline children))
+                 (condition-case nil
+                     (readable-org-wrap-branch
+                      (->> (org-ml-build-paragraph)
+                           (org-ml-set-children ochildren)))
+                   (error (error "Error: %s" ochildren)))))
+              ((ul ol)
+               (readable-org-wrap-branch
+                (go-list tag children)))
+              (pre
+               (pcase children
+                 (`((code ,_ . ,content))
+                  (readable-org-wrap-branch
+                   (org-ml-build-src-block
+                    :value (text-content content))))
+                 (_
+                  (readable-org-wrap-branch
+                   (org-ml-build-src-block
+                    :value (text-content children))))))
+              (blockquote
+               (readable-org-wrap-branch
+                (->> (org-ml-build-quote-block)
+                     (org-ml-set-children (-map (-compose #'readable-org-unwrap
+                                                          #'go)
+                                                children)))))
+              (figure
+               (-let* (((captions rest) (--separate (pcase it
+                                                      (`(,tag . ,_)
+                                                       (eq tag 'figcaption)))
+                                                    children))
+                       (caption-text (when captions
+                                       (normalize-space (text-content captions))))
+                       (ochildren (->> rest
+                                       (--remove (and (stringp it) (string-empty-p (trim-string it))))
+                                       (-non-nil)
+                                       (-map #'go))))
+                 (if caption-text
+                     (condition-case nil
+                         (cons (readable-org-wrap-branch
+                                (->> (readable-org-unwrap (car ochildren))
+                                     (org-ml-set-caption! caption-text)))
+                               (cdr ochildren))
+                       (error (error "Error: %s" (readable-org-unwrap (car ochildren)))))
+                   ochildren)))
+              (details
+               (-let (((summaries rest) (--separate (pcase it
+                                                      (`(,tag . ,_)
+                                                       (eq tag 'summary)))
+                                                    children)))
                  (readable-org-wrap-branch
-                  (org-ml-build-src-block
-                   :value (text-content content))))
-                (_
+                  (->> (org-ml-build-special-block
+                        "details"
+                        :name (when summaries
+                                (normalize-space (text-content (cddar summaries)))))
+                       (org-ml-set-children (->> (-map #'go rest)
+                                                 (-flatten)
+                                                 ;; I want to remove this
+                                                 (-remove #'stringp)
+                                                 (-map #'readable-org-unwrap)))))))
+              (table
+               (readable-org-wrap-branch
+                (org-ml-build-special-block
+                 "A table is supposed to be here, but I haven't supported it yet.")))
+              (header
+               ;; Skip headers
+               nil)
+              ;; For inside a figure
+              (img
+               (readable-org-wrap-branch
+                (->> (org-ml-build-paragraph)
+                     (org-ml-set-children (go-inline (list x))))))
+              (otherwise
+               (when-let (ochildren (go-inline (list x)))
                  (readable-org-wrap-branch
-                  (org-ml-build-src-block
-                   :valud (text-content children))))))
-             (blockquote
-              (readable-org-wrap-branch
-               (->> (org-ml-build-quote-block)
-                 (org-ml-set-children (-map (-compose #'readable-org-unwrap
-                                                      #'go)
-                                            children)))))
-             (figure
-              (-let* (((captions rest) (--separate (pcase it
-                                                     (`(,tag . ,_)
-                                                      (eq tag 'figcaption)))
-                                                   children))
-                      (caption-text (when captions
-                                      (normalize-space (text-content captions))))
-                      (ochildren (->> rest
-                                   (--remove (and (stringp it) (string-empty-p (trim-string it))))
-                                   (-non-nil)
-                                   (-map #'go))))
-                (if caption-text
-                    (condition-case nil
-                        (cons (readable-org-wrap-branch
-                               (->> (readable-org-unwrap (car ochildren))
-                                 (org-ml-set-caption! caption-text)))
-                              (cdr ochildren))
-                      (error (error "Error: %s" (readable-org-unwrap (car ochildren)))))
-                  ochildren)))
-             (details
-              (-let (((summaries rest) (--separate (pcase it
-                                                     (`(,tag . ,_)
-                                                      (eq tag 'summary)))
-                                                   children)))
-                (readable-org-wrap-branch
-                 (->> (org-ml-build-special-block
-                       "details"
-                       :name (when summaries
-                               (normalize-space (text-content (cddar summaries)))))
-                   (org-ml-set-children (->> (-map #'go rest)
-                                          (-flatten)
-                                          ;; I want to remove this
-                                          (-remove #'stringp)
-                                          (-map #'readable-org-unwrap)))))))
-             (table
-              (readable-org-wrap-branch
-               (org-ml-build-special-block
-                "A table is supposed to be here, but I haven't supported it yet.")))
-             (header
-              ;; Skip headers
-              nil)
-             ;; For inside a figure
-             (img
-              (readable-org-wrap-branch
-               (->> (org-ml-build-paragraph)
-                 (org-ml-set-children (go-inline (list x))))))
-             (otherwise
-              (when-let (ochildren (go-inline (list x)))
-                (readable-org-wrap-branch
-                 (->> (org-ml-build-paragraph)
-                   (org-ml-set-children ochildren)))))))
-          ((pred stringp)
-           x))))
+                  (->> (org-ml-build-paragraph)
+                       (org-ml-set-children ochildren)))))))
+           ((pred stringp)
+            x))))
     (->> dom
-      ;; take the children of html
-      (cddr)
-      (-map #'cddr)
-      (-flatten-n 1)
-      (-map #'go)
-      (-flatten)
-      (-remove (lambda (s)
-                 (and (stringp s)
-                      (string-match-p (rx bos (+ (any space "\n")) eos) s)))))))
+         ;; take the children of html
+         (cddr)
+         (-map #'cddr)
+         (-flatten-n 1)
+         (-map #'go)
+         (-flatten)
+         (-remove (lambda (s)
+                    (and (stringp s)
+                         (string-match-p (rx bos (+ (any space "\n")) eos) s)))))))
 
 (cl-defstruct readable-org-fragment
   "Alternative representation for content below a heading."
