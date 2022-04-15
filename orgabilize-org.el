@@ -36,6 +36,9 @@
 (defconst orgabilize-org-origin-url-property
   "ORGABILIZE_ORIGIN_URL")
 
+(defconst orgabilize-org-src-language-keyword
+  "ORGABILIZE_SRC_LANGUAGE")
+
 (defcustom orgabilize-org-archive-directory
   (expand-file-name "orgabilize/" org-directory)
   "Directory in which Org outputs are saved."
@@ -72,7 +75,7 @@ This is used to prevent Org elements from flattening."
   "Unwrap a surrouding structure of X, if any."
   x)
 
-(defun orgabilize-org--parse-dom (dom)
+(cl-defun orgabilize-org--parse-dom (dom &key src-language)
   "Transform DOM into a sequence representing part of an Org document.
 
 The argument should be an HTML dom as parsed using
@@ -231,10 +234,10 @@ The argument should be an HTML dom as parsed using
                (-map #'go children))
               ((h1 h2 h3 h4 h5 h6)
                (make-orgabilize-org-headline :level (string-to-number
-                                                   (string-remove-prefix
-                                                    "h" (symbol-name tag)))
-                                           :id (alist-get 'id attrs)
-                                           :text (normalize-space (text-content children))))
+                                                     (string-remove-prefix
+                                                      "h" (symbol-name tag)))
+                                             :id (alist-get 'id attrs)
+                                             :text (normalize-space (text-content children))))
               (p
                (when-let (ochildren (go-inline children))
                  (condition-case nil
@@ -250,10 +253,12 @@ The argument should be an HTML dom as parsed using
                  (`((code ,_ . ,content))
                   (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
+                    :language src-language
                     :value (text-content content))))
                  (_
                   (orgabilize-org-wrap-branch
                    (org-ml-build-src-block
+                    :language src-language
                     :value (text-content children))))))
               (blockquote
                (orgabilize-org-wrap-branch
@@ -360,13 +365,15 @@ The argument should be an HTML dom as parsed using
                                children)
                           (set-post-blank)))))))))))
 
-(cl-defun orgabilize-org--build-headline (dom &key title level tags)
+(cl-defun orgabilize-org--build-headline (dom &key title level tags
+                                              src-language)
   "Build an Org headline from an html dom.
 
 DOM must be an html dom. It constructs an Org headline with TITLE
 at LEVEL, with optional TAGS."
   (declare (indent 1))
-  (let ((fragment (->> (orgabilize-org--parse-dom dom)
+  (let ((fragment (->> (orgabilize-org--parse-dom
+                        dom :src-language src-language)
                        (orgabilize-org--to-fragment))))
     (apply #'org-ml-build-headline!
            :level level
@@ -406,10 +413,25 @@ at LEVEL, with optional TAGS."
                             (find-file-noselect outfile))))
          (dom (orgabilize-document-dom document))
          (level 1)
+         orig-hash
+         src-language
          new-buffer)
     (if existing
         (with-current-buffer existing
           (widen)
+          (setq hash (sha1 (current-buffer)))
+          (save-excursion
+            (goto-char (point-min))
+            (when (org-before-first-heading-p)
+              (let ((bound (save-excursion
+                             (re-search-forward org-heading-regexp nil t)))
+                    (case-fold-search t))
+                (catch 'orgabilize-headers
+                  (while (re-search-forward org-keyword-regexp bound t)
+                    (let ((kwd (match-string 1)))
+                      (when (equal kwd orgabilize-org-src-language-keyword)
+                        (setq src-language
+                              (string-trim (match-string 2))))))))))
           (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
               (progn
                 (goto-char start)
@@ -432,14 +454,20 @@ at LEVEL, with optional TAGS."
           (orgabilize-org--build-headline dom
             :title title
             :tags '("fulltext")
-            :level level)
+            :level level
+            :src-language (when (and src-language
+                                     (not (string-empty-p src-language)))
+                            src-language))
           (org-ml-headline-set-node-properties
            (list (org-ml-build-node-property
                   orgabilize-org-origin-url-property clean-url)))
           (org-ml-insert (point)))
         (goto-char start)
         (org-show-entry))
-      (save-buffer)
+      (when (or new-buffer
+                (not (equal (sha1 (current-buffer))
+                            orig-hash)))
+        (save-buffer))
       (if (called-interactively-p 'any)
           (pop-to-buffer-same-window (current-buffer))
         (current-buffer)))))
