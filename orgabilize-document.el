@@ -30,6 +30,8 @@
 ;;; Code:
 
 (require 'orgabilize-fetch)
+(require 'orgabilize-utils)
+
 (require 'eieio)
 (require 'eieio-base)
 
@@ -99,15 +101,16 @@ It constructs an instance of the class for URL.
 
 You can optionally specify SOURCE-FILE for retrieving the content
 from the file. This is intended for testing."
-  (or (eieio-instance-tracker-find url 'url 'orgabilize-document-tracker)
-      (let ((data (orgabilize--json-data url source-file)))
-        (make-instance 'orgabilize-document
-                       :url url
-                       :buffer-creation-time (current-time)
-                       :title (alist-get 'title data)
-                       :excerpt (alist-get 'excerpt data)
-                       :byline (alist-get 'byline data)
-                       :html-content (alist-get 'html-content data)))))
+  (let ((url (orgabilize-clean-url-string url)))
+    (or (eieio-instance-tracker-find url 'url 'orgabilize-document-tracker)
+        (let ((data (orgabilize--json-data url source-file)))
+          (make-instance 'orgabilize-document
+                         :url url
+                         :buffer-creation-time (current-time)
+                         :title (alist-get 'title data)
+                         :excerpt (alist-get 'excerpt data)
+                         :byline (alist-get 'byline data)
+                         :html-content (alist-get 'html-content data))))))
 
 (cl-defgeneric orgabilize-document-dom (x)
   "Return the html dom of the content of X.")
