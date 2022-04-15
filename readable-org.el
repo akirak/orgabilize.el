@@ -152,7 +152,7 @@ The argument should be an HTML dom as parsed using
                             (error "Unsupported tag %s in go-inline (with children %s)"
                                    tag children))))
                         ((pred stringp)
-                         node))))
+                         (normalize-space node)))))
               ;; Unwrap lists that are not org elements
               (-map (lambda (tree)
                       (--tree-map-nodes (and (listp it)
