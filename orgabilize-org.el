@@ -440,7 +440,7 @@ at LEVEL, with optional TAGS."
     (if existing
         (with-current-buffer existing
           (widen)
-          (setq hash (sha1 (current-buffer)))
+          (setq orig-hash (sha1 (current-buffer)))
           (save-excursion
             (goto-char (point-min))
             (when (org-before-first-heading-p)
@@ -486,10 +486,11 @@ at LEVEL, with optional TAGS."
           (org-ml-insert (point)))
         (goto-char start)
         (org-show-entry))
-      (when (or new-buffer
-                (not (equal (sha1 (current-buffer))
-                            orig-hash)))
-        (save-buffer))
+      (if (or new-buffer
+              (not (equal (sha1 (current-buffer))
+                          orig-hash)))
+          (save-buffer)
+        (message "Not changed"))
       (if (called-interactively-p 'any)
           (pop-to-buffer-same-window (current-buffer))
         (current-buffer)))))
