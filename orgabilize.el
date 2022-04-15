@@ -77,20 +77,5 @@ of the heading, if it has an id attribute."
                      "\n")
           "\n"))
 
-;;;###autoload
-(defun orgabilize-read-in-shr (url)
-  "Read URL in a non-file shr buffer."
-  (interactive "sUrl: ")
-  (let* ((document (orgabilize-document-for-url url))
-         (buffer-name (generate-new-buffer-name (format "*orgabilize shr %s*" title)))
-         (out-buffer (generate-new-buffer buffer-name)))
-    (with-current-buffer out-buffer
-      (insert "<h1>" (oref document title) "</h1>\n"
-              (oref document html-content))
-      (shr-render-region (point-min) (point-max))
-      (read-only-mode t)
-      (goto-char (point-min)))
-    (pop-to-buffer-same-window out-buffer)))
-
 (provide 'orgabilize)
 ;;; orgabilize.el ends here
