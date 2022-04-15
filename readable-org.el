@@ -82,8 +82,7 @@ The argument should be an HTML dom as parsed using
        (normalize-space
          (str)
          (->> str
-              (replace-regexp-in-string (rx (+ (any space "\n"))) " ")
-              (string-trim)))
+              (replace-regexp-in-string (rx (+ (any space))) " ")))
        (language-p
          (name)
          (when-let (mode (intern-soft (concat name "-mode")))
