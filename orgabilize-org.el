@@ -33,6 +33,21 @@
 (require 'org-ml)
 (require 'orgabilize-document)
 
+(defconst orgabilize-org-origin-url-property
+  "ORGABILIZE_ORIGIN_URL")
+
+(defcustom orgabilize-org-archive-directory
+  (expand-file-name "orgabilize/" org-directory)
+  "Directory in which Org outputs are saved."
+  :group 'orgabilize
+  :type 'directory)
+
+(defcustom orgabilize-org-archive-filename-fn
+  #'orgabilize-org-archive-filename-1
+  ""
+  :group 'orgabilize
+  :type 'function)
+
 (cl-defstruct orgabilize-org-branch
   "Container for an Org branch.
 
@@ -358,56 +373,72 @@ at LEVEL, with optional TAGS."
            :title-text title
            :tags tags
            :pre-blank 1
-           :section-children (orgabilize-org-fragment-head-content fragment)
+           :section-children
+           (orgabilize-org-fragment-head-content fragment)
            (orgabilize-org-fragment-subheadlines fragment))))
 
+(cl-defun orgabilize-org-archive-filename-1 (&key url title)
+  "Return a file name without directory."
+  (concat (if-let* ((url-obj (url-generic-parse-url url))
+                    (host (url-host url-obj)))
+              (concat host "-")
+            "")
+          (->> title
+               (replace-regexp-in-string (rx (+ (any punct))) "")
+               (replace-regexp-in-string (rx (+ space)) "-")
+               (downcase))
+          ".org"))
+
 ;;;###autoload
-(cl-defun orgabilize-save-to-org-file (url file &key allow-overwrite)
-  "Save the html content of a web page to a file in Org.
-
-URL is the location of the web page.
-
-FILE is the name of a file to create. It can also be a function
-which takes the title of the web page and returns a file name.
-
-If ALLOW-OVERWRITE is non-nil, it will overwrite the latest version
-if any."
-  (interactive (list (read-string "URL: ")
-                     (read-file-name "Save to file: ")))
+(cl-defun orgabilize-org-archive (url)
+  (interactive "sUrl: ")
+  (unless (file-directory-p orgabilize-org-archive-directory)
+    (make-directory orgabilize-org-archive-directory))
   (let* ((document (orgabilize-document-for-url url))
-         (outfile (cl-etypecase file
-                    (string file)
-                    (function (funcall file title) )))
-         (overwrite (and (file-exists-p outfile)
-                         (or allow-overwrite
-                             (yes-or-no-p (format "File %s already exists. Overwrite?"
-                                                  (abbreviate-file-name outfile)))
-                             (user-error "Aborted"))))
-         (dom (orgabilize-document-dom document)))
-    (with-current-buffer (create-file-buffer outfile)
-      (org-ml-insert (point-min)
-                     (org-ml-build-headline!
-                      :level 1
-                      :title-text (oref document title)
-                      :section-children
-                      (cons (org-ml-build-property-drawer
-                             (org-ml-build-node-property "READABLE_ORIGIN_URL" url))
-                            (-non-nil
-                             (list
-                              (when-let (excerpt (oref document excerpt))
-                                (org-ml-build-special-block
-                                 "excerpt"
-                                 (org-ml-build-paragraph! excerpt))))))
-                      (orgabilize-org--build-headline dom
-                                                      :title "Fulltext"
-                                                      :tags '("fulltext")
-                                                      :level 1)))
-      (setq buffer-file-name outfile)
-      (when overwrite
-        (delete-file outfile))
-      (org-mode)
-      (goto-char (point-min))
-      (org-show-entry)
+         (clean-url (oref document url))
+         (title (oref document title))
+         (outfile (expand-file-name (funcall orgabilize-org-archive-filename-fn
+                                             :url clean-url
+                                             :title title)
+                                    orgabilize-org-archive-directory))
+         (existing (or (find-buffer-visiting outfile)
+                       (and (file-exists-p outfile)
+                            (find-file-noselect outfile))))
+         (dom (orgabilize-document-dom document))
+         (level 1)
+         new-buffer)
+    (if existing
+        (with-current-buffer existing
+          (widen)
+          (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
+              (progn
+                (goto-char start)
+                (setq level (org-outline-level))
+                (org-end-of-subtree)
+                (delete-region start (point)))
+            (re-search-forward org-heading-regexp nil t)))
+      (with-current-buffer (setq new-buffer (create-file-buffer outfile))
+        (insert "#+title: " title "\n")
+        (when-let (excerpt (oref document excerpt))
+          (org-ml-insert (point)
+                         (org-ml-build-special-block
+                          "excerpt"
+                          (org-ml-build-paragraph! excerpt))))
+        (setq buffer-file-name outfile)
+        (org-mode)))
+    (with-current-buffer (or existing new-buffer)
+      (let ((start (point)))
+        (thread-last
+          (orgabilize-org--build-headline dom
+            :title title
+            :tags '("fulltext")
+            :level level)
+          (org-ml-headline-set-node-properties
+           (list (org-ml-build-node-property
+                  orgabilize-org-origin-url-property clean-url)))
+          (org-ml-insert (point)))
+        (goto-char start)
+        (org-show-entry))
       (save-buffer)
       (if (called-interactively-p 'any)
           (pop-to-buffer-same-window (current-buffer))
