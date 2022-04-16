@@ -252,7 +252,7 @@ The argument should be an HTML dom as parsed using
          (pcase x
            (`(,tag ,attrs . ,children)
             (cl-case tag
-              ((div main article)
+              ((div main article section)
                (-map #'go children))
               ((h1 h2 h3 h4 h5 h6)
                (make-orgabilize-org-headline :level (string-to-number
