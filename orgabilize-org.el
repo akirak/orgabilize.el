@@ -80,6 +80,7 @@ This is used to prevent Org elements from flattening."
 
 The argument should be an HTML dom as parsed using
 `libxml-parse-html-region'."
+  ;; TODO Refactor and add unit tests for these functions.
   (cl-labels
       ((text-content
          (nodes)
@@ -230,6 +231,42 @@ The argument should be an HTML dom as parsed using
          (x)
          (and (listp x)
               (memq (car x) '(ul ol))))
+       (whitespace-p
+         (x)
+         (and (stringp x)
+              (string-match-p (rx bos (* space) eos) x)))
+       (not-whitespace-p
+         (x)
+         (not (whitespace-p x)))
+       (paragraph-p
+         (x)
+         (and (listp x)
+              (eq (car x) 'paragraph)))
+       (paragraph-or-plain-text-p
+         (x)
+         (or (stringp x)
+             (paragraph-p x)))
+       (clean-whitespace
+         (elements)
+         (when (and elements (whitespace-p (car elements)))
+           (setq elements (cdr elements)))
+         (when (and elements (whitespace-p (-last-item elements)))
+           (setq elements (-butlast elements)))
+         elements)
+       (merge-paragraphs
+         (elements)
+         (->> (-group-by #'paragraph-or-plain-text-p (clean-whitespace elements))
+              (-map #'cdr)
+              (-map (lambda (xs)
+                      (if (paragraph-or-plain-text-p (car xs))
+                          (list (apply #'org-ml-build-paragraph
+                                       (->> xs
+                                            (--map (if (stringp it)
+                                                       (list it)
+                                                     (org-ml-get-children it)))
+                                            (-flatten-n 1))))
+                        xs)))
+              (-flatten-n 1)))
        (go-item
          (bullet item)
          (-let* (((paragraph-content children) (-split-with (-not #'list-p) item))
@@ -292,9 +329,11 @@ The argument should be an HTML dom as parsed using
               (blockquote
                (orgabilize-org-wrap-branch
                 (->> (org-ml-build-quote-block)
-                     (org-ml-set-children (-map (-compose #'orgabilize-org-unwrap
-                                                          #'go)
-                                                children)))))
+                     (org-ml-set-children
+                      (->> children
+                           (-map #'go)
+                           (-map #'orgabilize-org-unwrap)
+                           (merge-paragraphs))))))
               (figure
                (-let* (((captions rest) (--separate (pcase it
                                                       (`(,tag . ,_)
