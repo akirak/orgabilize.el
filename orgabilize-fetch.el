@@ -32,6 +32,8 @@
 (require 'url-http)
 (require 'url-parse)
 (require 'subr-x)
+(require 'dash)
+(require 'orgabilize-utils)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
@@ -81,14 +83,6 @@
           (delete-region (point-min) url-http-end-of-headers))
         (write-file cache-file)))
     cache-file))
-
-;;;; Utilities
-
-(defsubst orgabilize--string-take (len string)
-  "Take the first LEN characters of STRING."
-  (if (> len (length string))
-      string
-    (substring string 0 len)))
 
 (provide 'orgabilize-fetch)
 ;;; orgabilize-fetch.el ends here

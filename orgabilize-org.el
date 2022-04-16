@@ -303,7 +303,8 @@ The argument should be an HTML dom as parsed using
                        (caption-text (when captions
                                        (normalize-space (text-content captions))))
                        (ochildren (->> rest
-                                       (--remove (and (stringp it) (string-empty-p (trim-string it))))
+                                       (--remove (and (stringp it)
+                                                      (string-empty-p (string-trim it))))
                                        (-non-nil)
                                        (-map #'go))))
                  (if caption-text

@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1") (org-ml "5.6"))
+;; Package-Requires: ((emacs "27.1") (org-ml "5.6") (dash "2.19"))
 ;; Keywords: hypermedia outlines wp
 ;; URL: https://github.com/akirak/orgabilize.el
 
@@ -36,6 +36,8 @@
 ;;; Code:
 
 (require 'orgabilize-document)
+(require 'dash)
+(require 'ol)
 
 (defgroup orgabilize nil
   "Converts web pages into Org."

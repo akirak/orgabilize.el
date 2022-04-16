@@ -32,6 +32,7 @@
 (require 'orgabilize-fetch)
 (require 'orgabilize-utils)
 
+(require 'dash)
 (require 'eieio)
 (require 'eieio-base)
 
