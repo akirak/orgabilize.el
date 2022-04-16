@@ -56,12 +56,11 @@
                      (match-string 0 filename)
                    filename))))
     (concat (url-host obj)
-            (thread-last
-              path
-              (string-remove-suffix "/")
-              (replace-regexp-in-string "/" "_")
-              (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
-              (orgabilize--string-take 128))
+            (->> path
+                 (string-remove-suffix "/")
+                 (replace-regexp-in-string "/" "_")
+                 (replace-regexp-in-string (rx (not (any "-_" alnum))) "")
+                 (orgabilize--string-take 128))
             "__"
             (orgabilize--string-take 10 (sha1 filename)))))
 
