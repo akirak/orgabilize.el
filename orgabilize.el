@@ -47,8 +47,7 @@
 (defun orgabilize-insert-org-link (url)
   "Insert an Org link for URL."
   (interactive "sUrl: ")
-  (insert (org-link-make-string
-           url (oref (orgabilize-document-for-url url) title))))
+  (insert (org-link-make-string url (orgabilize-document-title url))))
 
 ;;;###autoload
 (cl-defun orgabilize-insert-org-toc (url &key include-header with-link)

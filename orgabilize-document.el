@@ -35,6 +35,7 @@
 (require 'dash)
 (require 'eieio)
 (require 'eieio-base)
+(require 'xml)
 
 ;;;; Custom variables
 
@@ -140,6 +141,31 @@ from the file. This is intended for testing."
   "Return the table of contents of X."
   (or (oref x toc)
       (oset x toc (orgabilize--dom-toc (orgabilize-document-dom x)))))
+
+(cl-defgeneric orgabilize-document-title (x)
+  "Return the title of X.")
+(cl-defmethod orgabilize-document-title ((url string))
+  "Return the title of a document at URL."
+  (let ((url (orgabilize-clean-url-string url)))
+    (if-let (document (eieio-instance-tracker-find
+                       url 'url 'orgabilize-document-tracker))
+        (oref document title)
+      ;; If the document is not available yet, prevent from parsing of the full
+      ;; document only for retrieving the title, because it is slow.
+      (with-temp-buffer
+        ;; It would be faster if we had skipped these write+read file
+        ;; operations.
+        (insert-file-contents (orgabilize-origin-source url))
+        (goto-char (point-min))
+        (let ((case-fold-search t))
+          (when (re-search-forward (rx "<title" (* space) ">") nil t)
+            (let ((start (point))
+                  (end (1- (save-excursion (re-search-forward "<")))))
+              ;; TODO Decode entities
+              (buffer-substring-no-properties start end))))))))
+(cl-defmethod orgabilize-document-title ((x orgabilize-document))
+  "Return the title of X."
+  (oref x title))
 
 ;;;; Extracting toc
 
