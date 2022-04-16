@@ -1,0 +1,78 @@
+{
+  "nodes": {
+    "dash": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1649102661,
+        "narHash": "sha256-9FbZSKIqqNEpUAvEkpOnA6OmiF0JdDsiGpti7SvFDNI=",
+        "owner": "magnars",
+        "repo": "dash.el",
+        "rev": "dc61f4641779616122692e34a32ba2a158ee034c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "magnars",
+        "repo": "dash.el",
+        "type": "github"
+      }
+    },
+    "org-ml": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1640934017,
+        "narHash": "sha256-e22eLLozS8h7vmMpuF/kiuXcJ0fJ+xyfke24/Cn6u30=",
+        "owner": "ndwarshuis",
+        "repo": "org-ml",
+        "rev": "3974435bbf72722801f7ed78855381d77a773162",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ndwarshuis",
+        "repo": "org-ml",
+        "type": "github"
+      }
+    },
+    "orgabilize": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1650081140,
+        "narHash": "sha256-8PgUg8rNOJ33CBgHI9v1tTkeH+iFat0yhCJIIEGyXAQ=",
+        "owner": "akirak",
+        "repo": "orgabilize.el",
+        "rev": "1bc87d76dd24e3953f3718d6bb47ed625629afe6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "akirak",
+        "repo": "orgabilize.el",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "dash": "dash",
+        "org-ml": "org-ml",
+        "orgabilize": "orgabilize",
+        "s": "s"
+      }
+    },
+    "s": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1623824393,
+        "narHash": "sha256-F0BrAlsxBskNzkyHriG3yNY+PZ7npYi1x98Ci5yVDAo=",
+        "owner": "magnars",
+        "repo": "s.el",
+        "rev": "08661efb075d1c6b4fa812184c1e5e90c08795a9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "magnars",
+        "repo": "s.el",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
