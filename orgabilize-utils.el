@@ -14,5 +14,16 @@
     (setf (url-target obj) nil)
     (url-recreate-url obj)))
 
+(defun orgabilize-decode-entity (string)
+  "Decode SGML entities in STRING."
+  (with-temp-buffer
+    (insert string)
+    (goto-char (point-min))
+    (save-match-data
+      (while (re-search-forward (rx "&#" (group (+ (any digit))) ";")
+                                nil t)
+        (replace-match (char-to-string (string-to-number (match-string 1))))))
+    (buffer-string)))
+
 (provide 'orgabilize-utils)
 ;;; orgabilize-utils.el ends here

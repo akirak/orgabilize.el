@@ -161,8 +161,8 @@ from the file. This is intended for testing."
           (when (re-search-forward (rx "<title" (* space) ">") nil t)
             (let ((start (point))
                   (end (1- (save-excursion (re-search-forward "<")))))
-              ;; TODO Decode entities
-              (buffer-substring-no-properties start end))))))))
+              (orgabilize-decode-entity
+               (buffer-substring-no-properties start end)))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))
