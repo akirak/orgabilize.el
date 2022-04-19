@@ -78,5 +78,12 @@ of the heading, if it has an id attribute."
                      "\n")
           "\n"))
 
+;;;###autoload
+(defun orgabilize-view-source (url)
+  (interactive "sUrl: ")
+  (if-let (file (orgabilize-origin-source url))
+      (find-file-read-only file)
+    (user-error "There is no source for the url")))
+
 (provide 'orgabilize)
 ;;; orgabilize.el ends here
