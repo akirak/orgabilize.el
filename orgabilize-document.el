@@ -70,7 +70,8 @@ original content body of the url. This is intended for testing."
                                 "--json" "-b" url
                                 (append orgabilize-args
                                         (list (or source-file
-                                                  (orgabilize-origin-source url))))))
+                                                  (orgabilize-origin-source url)
+                                                  (error "Didn't return data from %s" url))))))
             (error "Readable failed with non-zero exit code: %s"
                    (with-temp-buffer
                      (insert-file-contents err-file)
@@ -152,17 +153,20 @@ from the file. This is intended for testing."
         (oref document title)
       ;; If the document is not available yet, prevent from parsing of the full
       ;; document only for retrieving the title, because it is slow.
-      (with-temp-buffer
-        ;; It would be faster if we had skipped these write+read file
-        ;; operations.
-        (insert-file-contents (orgabilize-origin-source url))
-        (goto-char (point-min))
-        (let ((case-fold-search t))
-          (when (re-search-forward (rx "<title" (* space) ">") nil t)
-            (let ((start (point))
-                  (end (1- (save-excursion (re-search-forward "<")))))
-              (orgabilize-decode-entity
-               (buffer-substring-no-properties start end)))))))))
+      (catch 'document-title
+        (with-temp-buffer
+          ;; It would be faster if we had skipped these write+read file
+          ;; operations.
+          (if-let (file (orgabilize-origin-source url))
+              (insert-file-contents file)
+            (throw 'document-title nil))
+          (goto-char (point-min))
+          (let ((case-fold-search t))
+            (when (re-search-forward (rx "<title" (* space) ">") nil t)
+              (let ((start (point))
+                    (end (1- (save-excursion (re-search-forward "<")))))
+                (orgabilize-decode-entity
+                 (buffer-substring-no-properties start end))))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))

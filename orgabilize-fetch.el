@@ -74,15 +74,18 @@
 
 (defun orgabilize-origin-source (url)
   "Return a file name that contains the original content of URL."
-  (let ((cache-file (orgabilize--html-cache-file url)))
-    (unless (file-exists-p cache-file)
-      (with-current-buffer (url-retrieve-synchronously
-                            url t t
-                            orgabilize-download-timeout)
-        (when url-http-end-of-headers
-          (delete-region (point-min) url-http-end-of-headers))
-        (write-file cache-file)))
-    cache-file))
+  (catch 'fetched
+    (let ((cache-file (orgabilize--html-cache-file url)))
+      (unless (file-exists-p cache-file)
+        (with-current-buffer (url-retrieve-synchronously
+                              url t t
+                              orgabilize-download-timeout)
+          (when url-http-end-of-headers
+            (delete-region (point-min) url-http-end-of-headers))
+          (if (> (buffer-size) 0)
+              (write-file cache-file)
+            (throw 'fetched nil))))
+      cache-file)))
 
 (provide 'orgabilize-fetch)
 ;;; orgabilize-fetch.el ends here
