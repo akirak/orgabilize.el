@@ -82,6 +82,11 @@
                               orgabilize-download-timeout)
           (when url-http-end-of-headers
             (delete-region (point-min) url-http-end-of-headers))
+          ;; Trim preceding spaces (including newlines).
+          (goto-char (point-min))
+          (save-match-data
+            (when (looking-at (rx (+ space)))
+              (delete-region (point-min) (nth 1 (match-data)))))
           (if (> (buffer-size) 0)
               (write-file cache-file)
             (throw 'fetched nil))))
