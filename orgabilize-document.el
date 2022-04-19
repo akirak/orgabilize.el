@@ -161,12 +161,11 @@ from the file. This is intended for testing."
               (insert-file-contents file)
             (throw 'document-title nil))
           (goto-char (point-min))
-          (let ((case-fold-search t))
-            (when (re-search-forward (rx "<title" (* space) ">") nil t)
-              (let ((start (point))
-                    (end (1- (save-excursion (re-search-forward "<")))))
-                (orgabilize-decode-entity
-                 (buffer-substring-no-properties start end))))))))))
+          (save-match-data
+            (let ((case-fold-search t))
+              (when (re-search-forward (rx "<title") nil t)
+                (goto-char (car (match-data)))
+                (caddr (xml-parse-tag))))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))
