@@ -62,17 +62,20 @@ URL is the location of the document.
 Optionally, you can specify SOURCE-FILE which contains the
 original content body of the url. This is intended for testing."
   (with-temp-buffer
-    (let ((err-file (make-temp-file "orgabilize-error")))
+    (let ((err-file (make-temp-file "orgabilize-error"))
+          (source-file (or source-file
+                           (orgabilize-origin-source url)
+                           (error "Didn't return data from %s" url))))
       (unwind-protect
           (unless (zerop (apply #'call-process
                                 orgabilize-executable
                                 nil (list (current-buffer) err-file) nil
                                 "--json" "-b" url
                                 (append orgabilize-args
-                                        (list (or source-file
-                                                  (orgabilize-origin-source url)
-                                                  (error "Didn't return data from %s" url))))))
-            (error "Readable failed with non-zero exit code: %s"
+                                        (list source-file))))
+            (error "Readable failed with non-zero exit code:\nUrl: %s\nSource: %s\n%s"
+                   url
+                   source-file
                    (with-temp-buffer
                      (insert-file-contents err-file)
                      (buffer-string))))
