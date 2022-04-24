@@ -103,6 +103,7 @@ original content body of the url. This is intended for testing."
         :initform nil
         :type (or list null))))
 
+;;;###autoload
 (cl-defun orgabilize-document-for-url (url &key source-file)
   "Return an instance of `orgabilize-document'.
 
