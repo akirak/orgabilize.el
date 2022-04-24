@@ -1,2 +1,3 @@
 https://statecharts.dev/faq/why-statecharts-are-not-used.html
 https://creativecommons.org/publicdomain/zero/1.0/legalcode
+https://www.singlestore.com/blog/moving-from-next-js/
