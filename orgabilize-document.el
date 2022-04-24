@@ -161,7 +161,7 @@ from the file. This is intended for testing."
         (with-temp-buffer
           ;; It would be faster if we had skipped these write+read file
           ;; operations.
-          (if-let (file (orgabilize-origin-source url))
+          (if-let (file (ignore-errors (orgabilize-origin-source url)))
               (insert-file-contents file)
             (throw 'document-title nil))
           (goto-char (point-min))
