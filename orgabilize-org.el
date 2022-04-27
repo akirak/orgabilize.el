@@ -51,6 +51,12 @@
   :group 'orgabilize
   :type 'function)
 
+(defcustom orgabilize-org-strictness nil
+  ""
+  :group 'orgabilize
+  :type '(choice (const :tag "Strict" t)
+                 (const :tag "Loose" nil)))
+
 (cl-defstruct orgabilize-org-branch
   "Container for an Org branch.
 
@@ -188,8 +194,13 @@ The argument should be an HTML dom as parsed using
                         tag)
                nil)
               (otherwise
-               (error "Unsupported tag %s in go-inline (with children %s)"
-                      tag children))))
+               (pcase orgabilize-org-strictness
+                 (`nil
+                  (message "Unsupported tag %s in go-inline" tag)
+                  (-flatten (mapcar #'go-inline children)))
+                 (`t
+                  (error "Unsupported tag %s in go-inline (with children %s)"
+                         tag children))))))
            ((pred stringp)
             (normalize-space node))))
        (go-inline
