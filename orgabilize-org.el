@@ -181,7 +181,7 @@ The argument should be an HTML dom as parsed using
                (orgabilize-org-wrap-branch
                 (org-ml-build-code (text-content children))))
               ;; Tags that are just ignored
-              ((span time abbr figcaption)
+              ((span time abbr figcaption small)
                (-flatten (mapcar #'go-inline children)))
               (svg
                (message "Warning: %s element is ignored"
