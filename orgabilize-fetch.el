@@ -87,8 +87,9 @@
           (save-match-data
             (when (looking-at (rx (+ space)))
               (delete-region (point-min) (nth 1 (match-data)))))
+          (setq buffer-file-name cache-file)
           (if (> (buffer-size) 0)
-              (write-file cache-file)
+              (save-buffer)
             (throw 'fetched nil))))
       cache-file)))
 
