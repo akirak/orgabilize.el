@@ -85,5 +85,24 @@ of the heading, if it has an id attribute."
       (find-file-read-only file)
     (user-error "There is no source for the url")))
 
+;;;###autoload
+(defun orgabilize-update-link-title ()
+  "Update the title of the link at point.
+
+You can also add this function to `org-ctrl-c-ctrl-c-hook'."
+  (interactive)
+  (when (derived-mode-p 'org-mode)
+    (save-match-data
+      (when (thing-at-point-looking-at org-link-bracket-re)
+        (let* ((m (match-data))
+               (url (match-string 1))
+               (title (when (and (not (match-string 2))
+                                 (string-match-p (rx bol "http" (?  "s") ":") url))
+                        (orgabilize-document-title url))))
+          (when title
+            (delete-region (nth 0 m) (nth 1 m))
+            (insert (org-link-make-string url title))
+            t))))))
+
 (provide 'orgabilize)
 ;;; orgabilize.el ends here
