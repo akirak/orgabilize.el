@@ -39,6 +39,8 @@
 (require 'dash)
 (require 'ol)
 
+(declare-function thing-at-point-looking-at "thingatpt")
+
 (defgroup orgabilize nil
   "Converts web pages into Org."
   :group 'org)
