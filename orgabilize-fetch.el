@@ -93,5 +93,11 @@
             (throw 'fetched nil))))
       cache-file)))
 
+(defun orgabilize-save-file-as-url (file &optional url)
+  (interactive "fFile: ")
+  (let* ((url (or url (read-string "Url: ")))
+         (outfile (orgabilize--html-cache-file url)))
+    (copy-file file outfile t)))
+
 (provide 'orgabilize-fetch)
 ;;; orgabilize-fetch.el ends here

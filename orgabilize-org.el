@@ -578,5 +578,13 @@ at LEVEL, with optional TAGS."
           (pop-to-buffer-same-window (current-buffer))
         (current-buffer)))))
 
+;;;###autoload
+(defun orgabilize-org-archive-from-file (file)
+  "Convert a local html FILE to Org."
+  (interactive "fFile: ")
+  (let ((url (read-string "Url: ")))
+    (orgabilize-save-file-as-url file url)
+    (funcall-interactively #'orgabilize-org-archive url)))
+
 (provide 'orgabilize-org)
 ;;; orgabilize-org.el ends here
