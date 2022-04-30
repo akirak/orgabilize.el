@@ -49,6 +49,12 @@
   :group 'readable
   :type 'number)
 
+(defcustom orgabilize-fetch-log-file
+  (expand-file-name "orgabilize/fetch.log" user-emacs-directory)
+  "File to which fetched URLs are logged."
+  :group 'readable
+  :type 'file)
+
 (defun orgabilize--file-escape-url (url)
   "Return a path-safe string for URL."
   (let* ((obj (url-generic-parse-url url))
@@ -77,6 +83,11 @@
   (catch 'fetched
     (let ((cache-file (orgabilize--html-cache-file url)))
       (unless (file-exists-p cache-file)
+        (with-temp-buffer
+          (insert (format-time-string (org-time-stamp-format t t)
+                                      (current-time))
+                  " " url "\n")
+          (append-to-file (point-min) (point-max) orgabilize-fetch-log-file))
         (with-current-buffer (url-retrieve-synchronously
                               url t t
                               orgabilize-download-timeout)
