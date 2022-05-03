@@ -52,7 +52,8 @@
   (insert (org-link-make-string url (orgabilize-document-title url))))
 
 ;;;###autoload
-(cl-defun orgabilize-insert-org-toc (url &key include-header with-link)
+(cl-defun orgabilize-insert-org-toc (url &key include-header with-link
+                                         depth)
   "Insert the table of contents of a web page into Org.
 
 URL is the location of the document.
@@ -61,7 +62,10 @@ If INCLUDE-HEADER is non-nil, the output will contain headings
 inside HTML header elements.
 
 If WITH-LINK is non-nil, each item will be linked to the source
-of the heading, if it has an id attribute."
+of the heading, if it has an id attribute.
+
+If DEPTH is a positive integer, it limits the maximum level of
+items fo the value."
   (interactive (list (read-string "Url: ")
                      :with-link current-prefix-arg))
   (insert (mapconcat (lambda (x)
@@ -77,7 +81,10 @@ of the heading, if it has an id attribute."
                        (orgabilize-document-toc url)
                        (--filter (if include-header
                                      t
-                                   (not (orgabilize-toc-item-in-header it)))))
+                                   (not (orgabilize-toc-item-in-header it))))
+                       (--filter (if depth
+                                     (<= (orgabilize-toc-item-level x) depth)
+                                   t)))
                      "\n")
           "\n"))
 
