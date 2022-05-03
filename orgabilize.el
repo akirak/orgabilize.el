@@ -53,7 +53,7 @@
 
 ;;;###autoload
 (cl-defun orgabilize-insert-org-toc (url &key include-header with-link
-                                         depth)
+                                         depth checkbox)
   "Insert the table of contents of a web page into Org.
 
 URL is the location of the document.
@@ -68,13 +68,16 @@ If WITH-LINK is non-nil, each item will be linked to the source
 of the heading, if it has an id attribute.
 
 If DEPTH is a positive integer, it limits the maximum level of
-items fo the value."
+items fo the value.
+
+If CHECKBOX is non-nil, add an empty checkbox to each item."
   (interactive (let ((url (read-string "Url: ")))
                  (if current-prefix-arg
                      (list url
                            :include-header (yes-or-no-p "Include items in the header? ")
                            :with-link (yes-or-no-p "With link? ")
-                           :depth (read-number "Depth (0 to unlimited): "))
+                           :depth (read-number "Depth (0 to unlimited): ")
+                           :checkbox (yes-or-no-p "Add checkboxes? "))
                    (list url))))
   (insert (mapconcat (lambda (x)
                        (let ((level (orgabilize-toc-item-level x))
@@ -82,6 +85,9 @@ items fo the value."
                              (id (orgabilize-toc-item-id x)))
                          (concat (make-string (* 2 (- level 2)) ?\s)
                                  "- "
+                                 (if checkbox
+                                     "[ ] "
+                                   "")
                                  (if (and with-link id)
                                      (org-link-make-string (concat url "#" id) text)
                                    text))))
