@@ -73,10 +73,11 @@ of the heading, if it has an id attribute."
                                  (if (and with-link id)
                                      (org-link-make-string (concat url "#" id) text)
                                    text))))
-                     (-filter (if include-header
-                                  #'identity
-                                (-compose #'not #'orgabilize-toc-item-in-header))
-                              (orgabilize-document-toc url))
+                     (thread-last
+                       (orgabilize-document-toc url)
+                       (--filter (if include-header
+                                     t
+                                   (not (orgabilize-toc-item-in-header it)))))
                      "\n")
           "\n"))
 
