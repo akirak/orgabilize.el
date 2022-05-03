@@ -45,11 +45,17 @@
   "Converts web pages into Org."
   :group 'org)
 
+(defcustom orgabilize-use-canonical-urls t
+  "Whether to use canonical URLs to link to resources."
+  :group 'orgabilize
+  :type 'boolean)
+
 ;;;###autoload
 (defun orgabilize-insert-org-link (url)
   "Insert an Org link for URL."
   (interactive "sUrl: ")
-  (insert (org-link-make-string url (orgabilize-document-title url))))
+  (insert (org-link-make-string (orgabilize--url-for-link url)
+                                (orgabilize-document-title url))))
 
 ;;;###autoload
 (cl-defun orgabilize-insert-org-toc (url &key include-header with-link
@@ -79,7 +85,7 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
                            :depth (read-number "Depth (0 to unlimited): ")
                            :checkbox (yes-or-no-p "Add checkboxes? "))
                    (list url))))
-  (let ((url (orgabilize-clean-url-string url)))
+  (let ((url (orgabilize--url-for-link url)))
     (insert (mapconcat (lambda (x)
                          (let ((level (orgabilize-toc-item-level x))
                                (text (orgabilize-toc-item-text x))
@@ -128,6 +134,12 @@ You can also add this function to `org-ctrl-c-ctrl-c-hook'."
             (delete-region (nth 0 m) (nth 1 m))
             (insert (org-link-make-string url title))
             t))))))
+
+(defun orgabilize--url-for-link (url)
+  "Return a URL for linking."
+  (or (and orgabilize-use-canonical-urls
+           (orgabilize-document-canonical-url url))
+      (orgabilize-clean-url-string url)))
 
 (provide 'orgabilize)
 ;;; orgabilize.el ends here
