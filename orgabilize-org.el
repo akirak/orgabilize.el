@@ -67,6 +67,10 @@ This is used to prevent Org elements from flattening."
   "Org heading."
   level id text)
 
+(cl-defstruct orgabilize-org-archive-file title url tags)
+
+(defvar orgabilize-org-archive-file-cache nil)
+
 (defsubst orgabilize-org-wrap-branch (element)
   "Wrap ELEMENT in a `orgabilize-org-branch'."
   (make-orgabilize-org-branch :element element))
@@ -585,6 +589,84 @@ at LEVEL, with optional TAGS."
   (let ((url (read-string "Url: ")))
     (orgabilize-save-file-as-url file url)
     (funcall-interactively #'orgabilize-org-archive url)))
+
+;;;; Browsing the archive
+
+;;;###autoload
+(defun orgabilize-org-find-archived-file (file)
+  "Find a file in the Org archive."
+  (interactive (list (orgabilize-org-complete-file "File in Org archive: ")))
+  (if-let (buffer (find-buffer-visiting file))
+      (pop-to-buffer-same-window buffer)
+    (with-current-buffer (find-file-noselect file)
+      (save-excursion
+        (orgabilize-org--find-fulltext)
+        (org-cycle '(16)))
+      (pop-to-buffer-same-window (current-buffer)))))
+
+(defun orgabilize-org-complete-file (prompt)
+  (completing-read prompt (orgabilize-org--file-completion)
+                   nil t))
+
+(defun orgabilize-org--file-completion ()
+  (let ((files (thread-last
+                 (orgabilize-org--archived-files)
+                 (mapcar (lambda (path)
+                           (put-text-property 0 (length path) 'invisible t path)
+                           path)))))
+    `(lambda (string pred action)
+       (if (eq action 'metadata)
+           '(metadata . ((category . orgabilize-org-archive-file)
+                         (annotation-function . orgabilize-org-annotate-file)))
+         (complete-with-action action ',files string pred)))))
+
+(defun orgabilize-org--archived-files ()
+  (unless orgabilize-org-archive-file-cache
+    (setq orgabilize-org-archive-file-cache (make-hash-table :test #'equal)))
+  (directory-files orgabilize-org-archive-directory t org-agenda-file-regexp))
+
+(defun orgabilize-org--archive-file-info (file)
+  (or (gethash file orgabilize-org-archive-file-cache)
+      (when-let (buffer (find-buffer-visiting file))
+        (with-current-buffer buffer
+          (org-with-wide-buffer
+           (goto-char (point-min))
+           (puthash file (or (orgabilize-org--archive-info)
+                             (error "No fulltext entry in %s" file))
+                    orgabilize-org-archive-file-cache))))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (delay-mode-hooks (org-mode))
+        (goto-char (point-min))
+        (puthash file (or (orgabilize-org--archive-info)
+                          (error "No fulltext entry in %s" file))
+                 orgabilize-org-archive-file-cache))))
+
+(defun orgabilize-org--archive-info ()
+  (when (orgabilize-org--find-fulltext)
+    (make-orgabilize-org-archive-file
+     :title (substring-no-properties (org-get-heading t t t t))
+     :tags (cl-remove "fulltext" (org-get-tags) :test #'equal)
+     :url (org-entry-get nil "ORGABILIZE_ORIGIN_URL"))))
+
+(defun orgabilize-org-annotate-file (file)
+  (let ((info (orgabilize-org--archive-file-info file)))
+    (concat (orgabilize-org-archive-file-title info)
+            " "
+            (propertize (orgabilize-org-archive-file-url info)
+                        'face 'font-lock-comment-face)
+            " "
+            (mapconcat (lambda (s)
+                         (propertize s 'face 'org-tag)
+                         )
+                       (orgabilize-org-archive-file-tags info)
+                       ":"))))
+
+(defun orgabilize-org--find-fulltext ()
+  (catch 'orgabilize-fulltext
+    (while (re-search-forward org-heading-regexp nil t)
+      (when (member "fulltext" (org-get-tags))
+        (throw 'orgabilize-fulltext t)))))
 
 (provide 'orgabilize-org)
 ;;; orgabilize-org.el ends here
