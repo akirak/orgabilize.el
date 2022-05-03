@@ -58,6 +58,9 @@
 
 URL is the location of the document.
 
+If \[universal-prefix] is given in an interactive usage, this
+function prompts for options.
+
 If INCLUDE-HEADER is non-nil, the output will contain headings
 inside HTML header elements.
 
@@ -66,8 +69,13 @@ of the heading, if it has an id attribute.
 
 If DEPTH is a positive integer, it limits the maximum level of
 items fo the value."
-  (interactive (list (read-string "Url: ")
-                     :with-link current-prefix-arg))
+  (interactive (let ((url (read-string "Url: ")))
+                 (if current-prefix-arg
+                     (list url
+                           :include-header (yes-or-no-p "Include items in the header? ")
+                           :with-link (yes-or-no-p "With link? ")
+                           :depth (read-number "Depth (0 to unlimited): "))
+                   (list url))))
   (insert (mapconcat (lambda (x)
                        (let ((level (orgabilize-toc-item-level x))
                              (text (orgabilize-toc-item-text x))
@@ -82,8 +90,8 @@ items fo the value."
                        (--filter (if include-header
                                      t
                                    (not (orgabilize-toc-item-in-header it))))
-                       (--filter (if depth
-                                     (<= (orgabilize-toc-item-level x) depth)
+                       (--filter (if (and (numberp depth) (> depth 0))
+                                     (<= (orgabilize-toc-item-level it) (1+ depth))
                                    t)))
                      "\n")
           "\n"))
