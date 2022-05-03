@@ -36,6 +36,7 @@
 (require 'eieio)
 (require 'eieio-base)
 (require 'xml)
+(require 'sgml-mode)
 
 ;;;; Custom variables
 
@@ -90,6 +91,10 @@ original content body of the url. This is intended for testing."
   ((tracking-symbol :initform 'orgabilize-document-tracker)
    (url :initarg :url
         :type string)
+   (canonical-url :initarg :canonical-url
+                  :initform nil
+                  ;; If the document has no canonical URL, it should be set to t.
+                  :type (or string boolean null))
    (buffer-creation-time :initarg :buffer-creation-time
                          :type list)
    (title :initarg :title
@@ -116,6 +121,7 @@ You can optionally specify SOURCE-FILE for retrieving the content
 from the file. This is intended for testing."
   (let ((url (orgabilize-clean-url-string url)))
     (or (eieio-instance-tracker-find url 'url 'orgabilize-document-tracker)
+        (eieio-instance-tracker-find url 'canonical-url 'orgabilize-document-tracker)
         (let ((data (orgabilize--json-data url source-file)))
           (make-instance 'orgabilize-document
                          :url url
@@ -216,6 +222,55 @@ from the file. This is intended for testing."
               (parse-heading-inlines children)))))
       (go nil dom))
     (nreverse items)))
+
+;;;; Canonical URL
+
+(cl-defgeneric orgabilize-document-canonical-url (x)
+  "Return the html dom of the content of X.")
+(cl-defmethod orgabilize-document-canonical-url ((url string))
+  "Return the html dom of the content of URL."
+  (orgabilize-document-canonical-url (orgabilize-document-for-url url)))
+(cl-defmethod orgabilize-document-canonical-url ((x orgabilize-document))
+  "Return the html dom of the content of X."
+  (if-let (v (oref x canonical-url))
+      (unless (eq v t)
+        v)
+    (if-let (url (with-temp-buffer
+                   (insert-file-contents (orgabilize-origin-source
+                                          (oref x url)))
+                   (goto-char (point-min))
+                   (delay-mode-hooks (sgml-mode))
+                   (orgabilize-document--canonical-url)))
+        (oset x canonical-url url)
+      (oset x canonical-url t)
+      nil)))
+
+(defun orgabilize-document--canonical-url ()
+  "Search the canonical url from an HTML source in the buffer."
+  (save-match-data
+    (catch 'canonical-url
+      (let ((case-fold-search t))
+        (while (re-search-forward (rx "<" (* space) "link" space) nil t)
+          (if-let (context (car (sgml-get-context)))
+              (let ((bound (sgml-tag-end context)))
+                (when (re-search-forward (rx space "rel="
+                                             (? (any "\"'"))
+                                             "canonical"
+                                             (? (any "\"'")))
+                                         bound t)
+                  (goto-char (sgml-tag-start context))
+                  (when (re-search-forward (rx space "href=" (group (? (any "\"'"))))
+                                           bound t)
+                    (let ((attr-start (point)))
+                      (when (re-search-forward (or (match-string 1) (rx space)) bound t)
+                        (goto-char (match-beginning 0))
+                        (throw 'canonical-url
+                               (thread-last
+                                 (buffer-substring-no-properties attr-start (point))
+                                 (string-trim)
+                                 (orgabilize-decode-entity)))))))
+                (goto-char bound))
+            (forward-char)))))))
 
 ;;;; Private utility functions
 
