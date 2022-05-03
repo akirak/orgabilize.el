@@ -79,28 +79,29 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
                            :depth (read-number "Depth (0 to unlimited): ")
                            :checkbox (yes-or-no-p "Add checkboxes? "))
                    (list url))))
-  (insert (mapconcat (lambda (x)
-                       (let ((level (orgabilize-toc-item-level x))
-                             (text (orgabilize-toc-item-text x))
-                             (id (orgabilize-toc-item-id x)))
-                         (concat (make-string (* 2 (- level 2)) ?\s)
-                                 "- "
-                                 (if checkbox
-                                     "[ ] "
-                                   "")
-                                 (if (and with-link id)
-                                     (org-link-make-string (concat url "#" id) text)
-                                   text))))
-                     (thread-last
-                       (orgabilize-document-toc url)
-                       (--filter (if include-header
-                                     t
-                                   (not (orgabilize-toc-item-in-header it))))
-                       (--filter (if (and (numberp depth) (> depth 0))
-                                     (<= (orgabilize-toc-item-level it) (1+ depth))
-                                   t)))
-                     "\n")
-          "\n"))
+  (let ((url (orgabilize-clean-url-string url)))
+    (insert (mapconcat (lambda (x)
+                         (let ((level (orgabilize-toc-item-level x))
+                               (text (orgabilize-toc-item-text x))
+                               (id (orgabilize-toc-item-id x)))
+                           (concat (make-string (* 2 (- level 2)) ?\s)
+                                   "- "
+                                   (if checkbox
+                                       "[ ] "
+                                     "")
+                                   (if (and with-link id)
+                                       (org-link-make-string (concat url "#" id) text)
+                                     text))))
+                       (thread-last
+                         (orgabilize-document-toc url)
+                         (--filter (if include-header
+                                       t
+                                     (not (orgabilize-toc-item-in-header it))))
+                         (--filter (if (and (numberp depth) (> depth 0))
+                                       (<= (orgabilize-toc-item-level it) (1+ depth))
+                                     t)))
+                       "\n")
+            "\n")))
 
 ;;;###autoload
 (defun orgabilize-view-source (url)
