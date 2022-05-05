@@ -650,17 +650,21 @@ at LEVEL, with optional TAGS."
      :url (org-entry-get nil "ORGABILIZE_ORIGIN_URL"))))
 
 (defun orgabilize-org-annotate-file (file)
-  (let ((info (orgabilize-org--archive-file-info file)))
-    (concat (orgabilize-org-archive-file-title info)
-            " "
-            (propertize (orgabilize-org-archive-file-url info)
-                        'face 'font-lock-comment-face)
-            " "
-            (mapconcat (lambda (s)
-                         (propertize s 'face 'org-tag)
-                         )
-                       (orgabilize-org-archive-file-tags info)
-                       ":"))))
+  (if-let (info (ignore-errors
+                  (orgabilize-org--archive-file-info file)))
+      (concat (orgabilize-org-archive-file-title info)
+              " "
+              (propertize (orgabilize-org-archive-file-url info)
+                          'face 'font-lock-comment-face)
+              " "
+              (mapconcat (lambda (s)
+                           (propertize s 'face 'org-tag))
+                         (orgabilize-org-archive-file-tags info)
+                         ":"))
+    (propertize (format "%s: No fulltext entry"
+                        (file-name-nondirectory
+                         (substring-no-properties file)))
+                'face 'font-lock-comment-face)))
 
 (defun orgabilize-org--find-fulltext ()
   (catch 'orgabilize-fulltext
