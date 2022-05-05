@@ -231,21 +231,26 @@ from the file. This is intended for testing."
   "Return the html dom of the content of X.")
 (cl-defmethod orgabilize-document-canonical-url ((url string))
   "Return the html dom of the content of URL."
-  (orgabilize-document-canonical-url (orgabilize-document-for-url url)))
+  (let ((url (orgabilize-clean-url-string url)))
+    (if-let (document (orgabilize-document--maybe-instance url))
+        (orgabilize-document-canonical-url document)
+      (orgabilize-document--canonical-url-1 url))))
 (cl-defmethod orgabilize-document-canonical-url ((x orgabilize-document))
   "Return the html dom of the content of X."
   (if-let (v (oref x canonical-url))
       (unless (eq v t)
         v)
-    (if-let (url (with-temp-buffer
-                   (insert-file-contents (orgabilize-origin-source
-                                          (oref x url)))
-                   (goto-char (point-min))
-                   (delay-mode-hooks (sgml-mode))
-                   (orgabilize-document--canonical-url)))
+    (if-let (url (orgabilize-document--canonical-url-1 (oref x url)))
         (oset x canonical-url url)
       (oset x canonical-url t)
       nil)))
+
+(defun orgabilize-document--canonical-url-1 (url)
+  (with-temp-buffer
+    (insert-file-contents (orgabilize-origin-source url))
+    (goto-char (point-min))
+    (delay-mode-hooks (sgml-mode))
+    (orgabilize-document--canonical-url)))
 
 (defun orgabilize-document--canonical-url ()
   "Search the canonical url from an HTML source in the buffer."
