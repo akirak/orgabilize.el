@@ -261,8 +261,11 @@ from the file. This is intended for testing."
                   (goto-char (sgml-tag-start context))
                   (when (re-search-forward (rx space "href=" (group (? (any "\"'"))))
                                            bound t)
-                    (let ((attr-start (point)))
-                      (when (re-search-forward (or (match-string 1) (rx space)) bound t)
+                    (let ((attr-start (point))
+                          (quote-str (match-string 1)))
+                      (when (if (string-empty-p quote-str)
+                                (re-search-forward (rx (or space ">")) bound t)
+                              (search-forward quote-str bound t))
                         (goto-char (match-beginning 0))
                         (throw 'canonical-url
                                (thread-last
