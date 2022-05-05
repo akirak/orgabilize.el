@@ -74,12 +74,12 @@ original content body of the url. This is intended for testing."
                                 "--json" "-b" url
                                 (append orgabilize-args
                                         (list source-file))))
-            (error "Readable failed with non-zero exit code:\nUrl: %s\nSource: %s\n%s"
-                   url
-                   source-file
+            (error "Readable failed with non-zero exit code: %s\nUrl: %s\nSource: %s"
                    (with-temp-buffer
                      (insert-file-contents err-file)
-                     (buffer-string))))
+                     (buffer-string))
+                   url
+                   source-file))
         (delete-file err-file)))
     (goto-char (point-min))
     (json-parse-buffer :object-type 'alist
