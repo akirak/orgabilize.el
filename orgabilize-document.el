@@ -120,8 +120,7 @@ It constructs an instance of the class for URL.
 You can optionally specify SOURCE-FILE for retrieving the content
 from the file. This is intended for testing."
   (let ((url (orgabilize-clean-url-string url)))
-    (or (eieio-instance-tracker-find url 'url 'orgabilize-document-tracker)
-        (eieio-instance-tracker-find url 'canonical-url 'orgabilize-document-tracker)
+    (or (orgabilize-document--maybe-instance url)
         (let ((data (orgabilize--json-data url source-file)))
           (make-instance 'orgabilize-document
                          :url url
@@ -131,6 +130,10 @@ from the file. This is intended for testing."
                          :excerpt (alist-get 'excerpt data)
                          :byline (alist-get 'byline data)
                          :html-content (alist-get 'html-content data))))))
+
+(defun orgabilize-document--maybe-instance (url)
+  (or (eieio-instance-tracker-find url 'url 'orgabilize-document-tracker)
+      (eieio-instance-tracker-find url 'canonical-url 'orgabilize-document-tracker)))
 
 (cl-defgeneric orgabilize-document-dom (x)
   "Return the html dom of the content of X.")
@@ -159,8 +162,7 @@ from the file. This is intended for testing."
 (cl-defmethod orgabilize-document-title ((url string))
   "Return the title of a document at URL."
   (let ((url (orgabilize-clean-url-string url)))
-    (if-let (document (eieio-instance-tracker-find
-                       url 'url 'orgabilize-document-tracker))
+    (if-let (document (orgabilize-document--maybe-instance url))
         (oref document title)
       ;; If the document is not available yet, prevent from parsing of the full
       ;; document only for retrieving the title, because it is slow.
