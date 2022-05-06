@@ -78,31 +78,65 @@
                             ".html")
                     orgabilize-cache-directory))
 
-(defun orgabilize-origin-source (url)
-  "Return a file name that contains the original content of URL."
+(defun orgabilize-content-buffer (url)
+  "Return a buffer that contains the source of URL.
+
+The buffer is created every time you create this function, so you
+have to clean it up for yourself.
+
+The returned buffer will be in `fundamental-mode'.
+
+If the retrieval fails due to timeout or other kind of errors,
+nil is returned."
   (catch 'fetched
     (let ((cache-file (orgabilize--html-cache-file url)))
-      (unless (file-exists-p cache-file)
-        (with-temp-buffer
-          (insert (format-time-string (org-time-stamp-format t t)
-                                      (current-time))
-                  " " url "\n")
-          (append-to-file (point-min) (point-max) orgabilize-fetch-log-file))
-        (with-current-buffer (url-retrieve-synchronously
-                              url t t
-                              orgabilize-download-timeout)
-          (when url-http-end-of-headers
+      (if (file-exists-p cache-file)
+          (with-current-buffer (generate-new-buffer "*Orgabilize Src*")
+            (insert-file-contents cache-file)
+            (current-buffer))
+        (let ((buffer (url-retrieve-synchronously
+                       url t t
+                       orgabilize-download-timeout)))
+          (unless (buffer-live-p buffer)
+            (throw 'fetched nil))
+          (when (bound-and-true-p url-http-end-of-headers)
             (delete-region (point-min) url-http-end-of-headers))
           ;; Trim preceding spaces (including newlines).
           (goto-char (point-min))
           (save-match-data
             (when (looking-at (rx (+ space)))
               (delete-region (point-min) (nth 1 (match-data)))))
-          (setq buffer-file-name cache-file)
-          (if (> (buffer-size) 0)
-              (save-buffer)
-            (throw 'fetched nil))))
-      cache-file)))
+
+          ;; Defer logging.
+          (let ((log-msg (concat (format-time-string (org-time-stamp-format t t)
+                                                     (current-time))
+                                 " " url "\n")))
+            (run-with-idle-timer
+             1 nil
+             `(lambda ()
+                (with-temp-buffer
+                  (insert ,log-msg)
+                  (write-region (point-min) (point-max) orgabilize-fetch-log-file t)
+                  (message nil)))))
+
+          ;; If the content is empty, return nil.
+          (when (= (buffer-size) 0)
+            (throw 'fetched nil))
+
+          (write-region (point-min) (point-max)  cache-file)
+          (message nil)
+
+          buffer)))))
+
+(defmacro orgabilize-with-source-as-buffer (url &rest progn)
+  "Evaluate an expression with a buffer for the content of a url."
+  (declare (indent 1))
+  `(when-let (buffer (ignore-errors
+                       (orgabilize-content-buffer ,url)))
+     (unwind-protect
+         (with-current-buffer buffer
+           ,@progn)
+       (kill-buffer buffer))))
 
 (defun orgabilize-save-file-as-url (file &optional url)
   (interactive "fFile: ")

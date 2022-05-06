@@ -62,25 +62,35 @@ URL is the location of the document.
 
 Optionally, you can specify SOURCE-FILE which contains the
 original content body of the url. This is intended for testing."
-  (with-temp-buffer
-    (let ((err-file (make-temp-file "orgabilize-error"))
-          (source-file (or source-file
-                           (orgabilize-origin-source url)
-                           (error "Didn't return data from %s" url))))
-      (unwind-protect
-          (unless (zerop (apply #'call-process
-                                orgabilize-executable
-                                nil (list (current-buffer) err-file) nil
-                                "--json" "-b" url
-                                (append orgabilize-args
-                                        (list source-file))))
-            (error "Readable failed with non-zero exit code: %s\nUrl: %s\nSource: %s"
-                   (with-temp-buffer
-                     (insert-file-contents err-file)
-                     (buffer-string))
-                   url
-                   source-file))
-        (delete-file err-file)))
+  (if source-file
+      (with-temp-buffer
+        (insert-file-contents source-file)
+        (orgabilize--run-readable url))
+    (if-let (buffer (orgabilize-content-buffer url))
+        (unwind-protect
+            (with-current-buffer buffer
+              (orgabilize--run-readable url))
+          (kill-buffer buffer))
+      (error "Didn't return data from %s" url))))
+
+(defun orgabilize--run-readable (url)
+  (let ((err-file (make-temp-file "orgabilize-error")))
+    (unwind-protect
+        (unless (zerop (apply #'call-process-region
+                              (point-min) (point-max)
+                              orgabilize-executable
+                              'delete
+                              (list (current-buffer) err-file)
+                              nil
+                              "--json" "-b" url
+                              (append orgabilize-args
+                                      (list "-"))))
+          (error "Readable failed on %s: %s"
+                 url
+                 (with-temp-buffer
+                   (insert-file-contents err-file)
+                   (buffer-string))))
+      (delete-file err-file))
     (goto-char (point-min))
     (json-parse-buffer :object-type 'alist
                        :null-object nil)))
@@ -166,20 +176,14 @@ from the file. This is intended for testing."
         (oref document title)
       ;; If the document is not available yet, prevent from parsing of the full
       ;; document only for retrieving the title, because it is slow.
-      (catch 'document-title
-        (with-temp-buffer
-          ;; It would be faster if we had skipped these write+read file
-          ;; operations.
-          (if-let (file (ignore-errors (orgabilize-origin-source url)))
-              (insert-file-contents file)
-            (throw 'document-title nil))
-          (goto-char (point-min))
-          (save-match-data
-            (let ((case-fold-search t))
-              (when (re-search-forward (rx "<title") nil t)
-                (goto-char (car (match-data)))
-                (orgablize-document--escape-title
-                 (caddr (xml-parse-tag)))))))))))
+      (orgabilize-with-source-as-buffer url
+        (goto-char (point-min))
+        (save-match-data
+          (let ((case-fold-search t))
+            (when (re-search-forward (rx "<title") nil t)
+              (goto-char (car (match-data)))
+              (orgablize-document--escape-title
+               (caddr (xml-parse-tag))))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))

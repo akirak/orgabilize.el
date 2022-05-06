@@ -112,9 +112,15 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
 ;;;###autoload
 (defun orgabilize-view-source (url)
   (interactive "sUrl: ")
-  (if-let (file (orgabilize-origin-source url))
-      (find-file-read-only file)
-    (user-error "There is no source for the url")))
+  (let ((buffer-name (format "*Orgabilize<%s>*" url)))
+    (if (get-buffer buffer-name)
+        (pop-to-buffer buffer)
+      (if-let (buffer (orgabilize-content-buffer url))
+          (with-current-buffer buffer
+            (html-mode)
+            (rename-buffer buffer-name)
+            (pop-to-buffer (current-buffer)))
+        (user-error "There is no source for the url")))))
 
 ;;;###autoload
 (defun orgabilize-update-link-title ()
