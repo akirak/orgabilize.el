@@ -114,7 +114,7 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
   (interactive "sUrl: ")
   (let ((buffer-name (format "*Orgabilize<%s>*" url)))
     (if (get-buffer buffer-name)
-        (pop-to-buffer buffer)
+        (pop-to-buffer buffer-name)
       (if-let (buffer (orgabilize-content-buffer url))
           (with-current-buffer buffer
             (html-mode)
