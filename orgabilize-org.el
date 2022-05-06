@@ -505,7 +505,7 @@ at LEVEL, with optional TAGS."
           ".org"))
 
 ;;;###autoload
-(cl-defun orgabilize-org-archive (url)
+(defun orgabilize-org-archive (url)
   (interactive "sUrl: ")
   (unless (file-directory-p orgabilize-org-archive-directory)
     (make-directory orgabilize-org-archive-directory))
@@ -578,9 +578,7 @@ at LEVEL, with optional TAGS."
                           orig-hash)))
           (save-buffer)
         (message "Not changed"))
-      (if (called-interactively-p 'any)
-          (pop-to-buffer-same-window (current-buffer))
-        (current-buffer)))))
+      (pop-to-buffer-same-window (current-buffer)))))
 
 ;;;###autoload
 (defun orgabilize-org-archive-from-file (file)
