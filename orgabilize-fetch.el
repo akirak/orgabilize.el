@@ -123,8 +123,7 @@ nil is returned."
           (when (= (buffer-size) 0)
             (throw 'fetched nil))
 
-          (write-region (point-min) (point-max)  cache-file)
-          (message nil)
+          (write-region (point-min) (point-max) cache-file 'silent)
 
           buffer)))))
 
