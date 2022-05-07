@@ -250,8 +250,7 @@ from the file. This is intended for testing."
       nil)))
 
 (defun orgabilize-document--canonical-url-1 (url)
-  (with-temp-buffer
-    (insert-file-contents (orgabilize-origin-source url))
+  (orgabilize-with-source-as-buffer url
     (goto-char (point-min))
     (delay-mode-hooks (sgml-mode))
     (orgabilize-document--canonical-url)))
