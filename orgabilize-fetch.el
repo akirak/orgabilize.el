@@ -99,33 +99,37 @@ nil is returned."
                        orgabilize-download-timeout)))
           (unless (buffer-live-p buffer)
             (throw 'fetched nil))
-          (when (bound-and-true-p url-http-end-of-headers)
-            (delete-region (point-min) url-http-end-of-headers))
-          ;; Trim preceding spaces (including newlines).
-          (goto-char (point-min))
-          (save-match-data
-            (when (looking-at (rx (+ space)))
-              (delete-region (point-min) (nth 1 (match-data)))))
+          (with-current-buffer buffer
+            (when (bound-and-true-p url-http-end-of-headers)
+              (delete-region (point-min)
+                             (if (markerp url-http-end-of-headers)
+                                 (marker-position url-http-end-of-headers)
+                               url-http-end-of-headers)))
+            ;; Trim preceding spaces (including newlines).
+            (goto-char (point-min))
+            (save-match-data
+              (when (looking-at (rx (+ space)))
+                (delete-region (point-min) (nth 1 (match-data)))))
 
-          ;; Defer logging.
-          (let ((log-msg (concat (format-time-string (org-time-stamp-format t t)
-                                                     (current-time))
-                                 " " url "\n")))
-            (run-with-idle-timer
-             1 nil
-             `(lambda ()
-                (with-temp-buffer
-                  (insert ,log-msg)
-                  (write-region (point-min) (point-max) orgabilize-fetch-log-file t)
-                  (message nil)))))
+            ;; Defer logging.
+            (let ((log-msg (concat (format-time-string (org-time-stamp-format t t)
+                                                       (current-time))
+                                   " " url "\n")))
+              (run-with-idle-timer
+               1 nil
+               `(lambda ()
+                  (with-temp-buffer
+                    (insert ,log-msg)
+                    (write-region (point-min) (point-max) orgabilize-fetch-log-file t)
+                    (message nil)))))
 
-          ;; If the content is empty, return nil.
-          (when (= (buffer-size) 0)
-            (throw 'fetched nil))
+            ;; If the content is empty, return nil.
+            (when (= (buffer-size) 0)
+              (throw 'fetched nil))
 
-          (write-region (point-min) (point-max) cache-file 'silent)
+            (write-region (point-min) (point-max) cache-file 'silent)
 
-          buffer)))))
+            buffer))))))
 
 (defmacro orgabilize-with-source-as-buffer (url &rest progn)
   "Evaluate an expression with a buffer for the content of a url."
