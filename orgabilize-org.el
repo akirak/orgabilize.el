@@ -534,12 +534,11 @@ at LEVEL, with optional TAGS."
               (let ((bound (save-excursion
                              (re-search-forward org-heading-regexp nil t)))
                     (case-fold-search t))
-                (catch 'orgabilize-headers
-                  (while (re-search-forward org-keyword-regexp bound t)
-                    (let ((kwd (match-string 1)))
-                      (when (equal kwd orgabilize-org-src-language-keyword)
-                        (setq src-language
-                              (string-trim (match-string 2))))))))))
+                (while (re-search-forward org-keyword-regexp bound t)
+                  (let ((kwd (match-string 1)))
+                    (when (equal kwd orgabilize-org-src-language-keyword)
+                      (setq src-language
+                            (string-trim (match-string 2)))))))))
           (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
               (progn
                 (goto-char start)
