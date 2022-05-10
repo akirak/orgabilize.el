@@ -582,7 +582,7 @@ at LEVEL, with optional TAGS."
                                                 title level url
                                                 src-language)
   "Insert a full text into the point."
-  (with-current-buffer bufer
+  (with-current-buffer buffer
     (let ((start (point)))
       (thread-last
         (orgabilize-org--build-headline dom
