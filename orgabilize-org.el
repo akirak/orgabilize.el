@@ -556,29 +556,45 @@ at LEVEL, with optional TAGS."
                           (org-ml-build-paragraph! excerpt))))
         (setq buffer-file-name outfile)
         (org-mode)))
-    (with-current-buffer (or existing new-buffer)
-      (let ((start (point)))
-        (thread-last
-          (orgabilize-org--build-headline dom
-            :title title
-            :tags '("fulltext")
-            :level level
-            :url-without-fragment clean-url
-            :src-language (when (and src-language
-                                     (not (string-empty-p src-language)))
-                            src-language))
-          (org-ml-headline-set-node-properties
-           (list (org-ml-build-node-property
-                  orgabilize-org-origin-url-property clean-url)))
-          (org-ml-insert (point)))
-        (goto-char start)
-        (org-cycle '(16)))
-      (if (or new-buffer
-              (not (equal (sha1 (current-buffer))
-                          orig-hash)))
-          (save-buffer)
-        (message "Not changed"))
-      (pop-to-buffer-same-window (current-buffer)))))
+    (let ((buffer (or existing new-buffer)))
+      (orgabilize-org--insert-fulltext :buffer buffer
+                                       :dom dom
+                                       :title title
+                                       :level level
+                                       :src-language src-language
+                                       :url clean-url)
+      (with-current-buffer buffer
+        (if (or new-buffer
+                (not (equal (sha1 (current-buffer))
+                            orig-hash)))
+            (save-buffer)
+          (message "Not changed"))
+        (pop-to-buffer-same-window (current-buffer))))))
+
+(cl-defun orgabilize-org--insert-fulltext (&key buffer dom
+                                                title level url
+                                                src-language)
+  "Insert a full text into the point."
+  (with-current-buffer bufer
+    (let ((start (point)))
+      (thread-last
+        (orgabilize-org--build-headline dom
+          :title title
+          :tags '("fulltext")
+          :level level
+          :url-without-fragment url
+          :src-language (when (and src-language
+                                   (not (string-empty-p src-language)))
+                          src-language))
+        (org-ml-headline-set-node-properties
+         (list (org-ml-build-node-property
+                orgabilize-org-origin-url-property clean-url)))
+        (org-ml-insert (point)))
+      (goto-char start)
+      (orgabilize-org--set-visibility))))
+
+(defun orgabilize-org--set-visibility ()
+  (org-cycle '(16)))
 
 ;;;###autoload
 (defun orgabilize-org-archive-from-file (file)
