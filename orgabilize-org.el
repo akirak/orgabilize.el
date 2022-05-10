@@ -595,7 +595,7 @@ at LEVEL, with optional TAGS."
                           src-language))
         (org-ml-headline-set-node-properties
          (list (org-ml-build-node-property
-                orgabilize-org-origin-url-property clean-url)))
+                orgabilize-org-origin-url-property url)))
         (org-ml-insert (point)))
       (goto-char start)
       (orgabilize-org--set-visibility))))

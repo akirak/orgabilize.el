@@ -135,7 +135,7 @@ from the file. This is intended for testing."
           (make-instance 'orgabilize-document
                          :url url
                          :buffer-creation-time (current-time)
-                         :title (orgablize-document--escape-title
+                         :title (orgabilize-document--escape-title
                                  (alist-get 'title data))
                          :excerpt (alist-get 'excerpt data)
                          :byline (alist-get 'byline data)
@@ -182,7 +182,7 @@ from the file. This is intended for testing."
           (let ((case-fold-search t))
             (when (re-search-forward (rx "<title") nil t)
               (goto-char (car (match-data)))
-              (orgablize-document--escape-title
+              (orgabilize-document--escape-title
                (caddr (xml-parse-tag))))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
@@ -287,7 +287,7 @@ from the file. This is intended for testing."
 
 ;;;; Private utility functions
 
-(defun orgablize-document--escape-title (string)
+(defun orgabilize-document--escape-title (string)
   ;; Convert whitespaces (including tabs and newlines) into a single space
   (replace-regexp-in-string (rx (+ space)) " " string))
 

@@ -34,6 +34,7 @@
 (require 'subr-x)
 (require 'dash)
 (require 'orgabilize-utils)
+(require 'org)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
