@@ -505,8 +505,9 @@ at LEVEL, with optional TAGS."
           ".org"))
 
 ;;;###autoload
-(defun orgabilize-org-archive (url)
-  (interactive "sUrl: ")
+(defun orgabilize-org-archive (url &optional force)
+  (interactive (list (read-string "Url: ")
+                     current-prefix-arg))
   (unless (file-directory-p orgabilize-org-archive-directory)
     (make-directory orgabilize-org-archive-directory))
   (let* ((document (orgabilize-document-for-url url))
@@ -524,51 +525,58 @@ at LEVEL, with optional TAGS."
          orig-hash
          src-language
          new-buffer)
-    (if existing
-        (with-current-buffer existing
-          (widen)
-          (setq orig-hash (sha1 (current-buffer)))
-          (save-excursion
-            (goto-char (point-min))
-            (when (org-before-first-heading-p)
-              (let ((bound (save-excursion
-                             (re-search-forward org-heading-regexp nil t)))
-                    (case-fold-search t))
-                (while (re-search-forward org-keyword-regexp bound t)
-                  (let ((kwd (match-string 1)))
-                    (when (equal kwd orgabilize-org-src-language-keyword)
-                      (setq src-language
-                            (string-trim (match-string 2)))))))))
-          (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
-              (progn
-                (goto-char start)
-                (setq level (org-outline-level))
-                (org-end-of-subtree)
-                (delete-region start (point)))
-            (re-search-forward org-heading-regexp nil t)))
-      (with-current-buffer (setq new-buffer (create-file-buffer outfile))
-        (insert "#+title: " title "\n")
-        (when-let (excerpt (oref document excerpt))
-          (org-ml-insert (point)
-                         (org-ml-build-special-block
-                          "excerpt"
-                          (org-ml-build-paragraph! excerpt))))
-        (setq buffer-file-name outfile)
-        (org-mode)))
-    (let ((buffer (or existing new-buffer)))
-      (orgabilize-org--insert-fulltext :buffer buffer
-                                       :dom dom
-                                       :title title
-                                       :level level
-                                       :src-language src-language
-                                       :url clean-url)
-      (with-current-buffer buffer
-        (if (or new-buffer
-                (not (equal (sha1 (current-buffer))
-                            orig-hash)))
-            (save-buffer)
-          (message "Not changed"))
-        (pop-to-buffer-same-window (current-buffer))))))
+    (catch 'abort
+      (if existing
+          (with-current-buffer existing
+            (widen)
+            (setq orig-hash (sha1 (current-buffer)))
+            (save-excursion
+              (goto-char (point-min))
+              (when (org-before-first-heading-p)
+                (let ((bound (save-excursion
+                               (re-search-forward org-heading-regexp nil t)))
+                      (case-fold-search t))
+                  (while (re-search-forward org-keyword-regexp bound t)
+                    (let ((kwd (match-string 1)))
+                      (when (equal kwd orgabilize-org-src-language-keyword)
+                        (setq src-language
+                              (string-trim (match-string 2)))))))))
+            (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
+                (if force
+                    (progn
+                      (goto-char start)
+                      (setq level (org-outline-level))
+                      (org-end-of-subtree)
+                      (delete-region start (point)))
+                  (goto-char start)
+                  (orgabilize-org--set-visibility)
+                  (message "Found an existing entry")
+                  (pop-to-buffer-same-window existing)
+                  (throw 'abort t))
+              (re-search-forward org-heading-regexp nil t)))
+        (with-current-buffer (setq new-buffer (create-file-buffer outfile))
+          (insert "#+title: " title "\n")
+          (when-let (excerpt (oref document excerpt))
+            (org-ml-insert (point)
+                           (org-ml-build-special-block
+                            "excerpt"
+                            (org-ml-build-paragraph! excerpt))))
+          (setq buffer-file-name outfile)
+          (org-mode)))
+      (let ((buffer (or existing new-buffer)))
+        (orgabilize-org--insert-fulltext :buffer buffer
+                                         :dom dom
+                                         :title title
+                                         :level level
+                                         :src-language src-language
+                                         :url clean-url)
+        (with-current-buffer buffer
+          (if (or new-buffer
+                  (not (equal (sha1 (current-buffer))
+                              orig-hash)))
+              (save-buffer)
+            (message "Not changed"))
+          (pop-to-buffer-same-window (current-buffer)))))))
 
 (cl-defun orgabilize-org--insert-fulltext (&key buffer dom
                                                 title level url
