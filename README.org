@@ -1,8 +1,19 @@
 * orgabilize.el
-Orgabilize (org + readable + -ize) is an Org-centric web page archiver for Emacs.
-It caches web pages, helps you insert a link with a title, and converts web pages to Org files in an archive directory.
+Orgabilize (org + readable + -ize) is an Org-centric web page archiver and helper for Emacs.
+
+It provides the following functionalities:
+
+- Insert a link to a URL with its title.
+- Insert the table of contents of a URL.
+- Convert a web page to an Org file in an archive directory so you can read/quote/annotate it.
+- View the source of a URL.
+
+Upstream sources are stored (cached) locally, so operations are fast.
+
 It uses [[https://gitlab.com/gardenappl/readability-cli][readability-cli]] to preprocess HTML.
 It is an alternative to [[https://github.com/alphapapa/org-web-tools][org-web-tools]] which uses pandoc, but =orgabilize= focuses on producing highly readable Org output from modern web pages.
+On the other hand, orgabilize is less reliable than org-web-tools, because it basically assumes valid HTML markups — It fails to process some web pages with invalid markup.
+It also cannot read the contents of client-rendered web pages, but it can still read titles and metadata from them.
 ** Installation
 Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
 ** Configuration
