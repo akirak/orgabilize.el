@@ -506,7 +506,7 @@ at LEVEL, with optional TAGS."
 
 ;;;###autoload
 (defun orgabilize-org-archive (url &optional force)
-  (interactive (list (read-string "Url: ")
+  (interactive (list (orgabilize-complete-url "Url to archive to an Org file: ")
                      current-prefix-arg))
   (unless (file-directory-p orgabilize-org-archive-directory)
     (make-directory orgabilize-org-archive-directory))
@@ -607,7 +607,7 @@ at LEVEL, with optional TAGS."
 (defun orgabilize-org-archive-from-file (file)
   "Convert a local html FILE to Org."
   (interactive "fFile: ")
-  (let ((url (read-string "Url: ")))
+  (let ((url (orgabilize-complete-url "Url: ")))
     (orgabilize-save-file-as-url file url)
     (funcall-interactively #'orgabilize-org-archive url)))
 

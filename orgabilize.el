@@ -53,7 +53,7 @@
 ;;;###autoload
 (defun orgabilize-insert-org-link (url)
   "Insert an Org link for URL."
-  (interactive "sUrl: ")
+  (interactive (orgabilize-complete-url "Insert a link to a URL: "))
   (insert (org-link-make-string (orgabilize--url-for-link url)
                                 (orgabilize-document-title url))))
 
@@ -77,7 +77,7 @@ If DEPTH is a positive integer, it limits the maximum level of
 items fo the value.
 
 If CHECKBOX is non-nil, add an empty checkbox to each item."
-  (interactive (let ((url (read-string "Url: ")))
+  (interactive (let ((url (orgabilize-complete-url "Insert the TOC of a URL: ")))
                  (if current-prefix-arg
                      (list url
                            :include-header (yes-or-no-p "Include items in the header? ")
@@ -111,7 +111,7 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
 
 ;;;###autoload
 (defun orgabilize-view-source (url)
-  (interactive "sUrl: ")
+  (interactive (list (orgabilize-complete-url "View the source of a URL: ")))
   (let ((buffer-name (format "*Orgabilize<%s>*" url)))
     (if (get-buffer buffer-name)
         (pop-to-buffer buffer-name)
