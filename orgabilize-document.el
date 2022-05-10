@@ -53,6 +53,8 @@
 ;;;; Variables
 (defvar orgabilize-document-tracker nil)
 
+(defvar orgabilize-url-history nil)
+
 ;;;; Running readable
 
 (defun orgabilize--json-data (url &optional source-file)
@@ -284,6 +286,28 @@ from the file. This is intended for testing."
                                  (orgabilize-decode-entity)))))))
                 (goto-char bound))
             (forward-char)))))))
+
+;;;; URL history and completion
+
+(defun orgabilize-complete-url (prompt &optional initial-input history)
+  (completing-read prompt
+                   (lambda (string pred action)
+                     (if (eq action 'metadata)
+                         '(metadata . ((category . orgabilize-url)))
+                       (complete-with-action action
+                                             orgabilize-url-history
+                                             string
+                                             pred)))
+                   nil nil
+                   (or initial-input
+                       (thing-at-point 'url t))
+                   history))
+
+(defun orgabilize-add-to-url-history (url)
+  (when url
+    (cl-pushnew url orgabilize-url-history))
+  ;; Return the URL
+  url)
 
 ;;;; Private utility functions
 
