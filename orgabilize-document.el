@@ -283,7 +283,8 @@ from the file. This is intended for testing."
                                (thread-last
                                  (buffer-substring-no-properties attr-start (point))
                                  (string-trim)
-                                 (orgabilize-decode-entity)))))))
+                                 (orgabilize-decode-entity)
+                                 (orgabilize-add-to-url-history)))))))
                 (goto-char bound))
             (forward-char)))))))
 
