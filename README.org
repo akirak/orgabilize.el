@@ -27,3 +27,9 @@ Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its ti
 Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
 *** Archiving to a directory
 Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
+** Todo
+- [ ] Improve the Org conversion
+  - [ ] Add tests
+  - [ ] Generate image links
+  - [ ] Handle more invalid web pages
+- [ ] Integrate with a headless browser to handle client-rendered web pages
