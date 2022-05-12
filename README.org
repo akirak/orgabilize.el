@@ -12,8 +12,10 @@ Upstream sources are stored (cached) locally, so operations are fast.
 
 It uses [[https://gitlab.com/gardenappl/readability-cli][readability-cli]] to preprocess HTML.
 It is an alternative to [[https://github.com/alphapapa/org-web-tools][org-web-tools]] which uses pandoc, but =orgabilize= focuses on producing highly readable Org output from modern web pages.
-On the other hand, orgabilize is less reliable than org-web-tools, because it basically assumes valid HTML markups — It fails to process some web pages with invalid markup.
+
+On the other hand, *orgabilize is less reliable than org-web-tools*, because it basically assumes HTML markup is valid — It fails to process some web pages marked up invalidly.
 It also cannot read the contents of client-rendered web pages, but it can still read titles and metadata from them.
+See [[#limitations][Limitations]] for details.
 ** Installation
 Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
 ** Configuration
@@ -27,6 +29,16 @@ Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its ti
 Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
 *** Archiving to a directory
 Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
+** Limitations
+:PROPERTIES:
+:CUSTOM_ID: limitations
+:END:
+At present, it fails to process many web pages.
+This may improve in the future as tests are added and bugs are fixed, but it is not going to be perfect, because how this package works.
+
+Another issue is the it cannot handle web pages that are supposed to be rendered in a browser (e.g. single-page applications).
+For these pages, you can use =orgabilize-save-file-as-url= command to save an offline version as a URL.
+A more thorough solution would be to integrate with a headless browser, but it is not going to be part of this package.
 ** Todo
 - [ ] Improve the Org conversion
   - [ ] Add tests
