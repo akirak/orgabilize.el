@@ -38,7 +38,7 @@ This may improve in the future as tests are added and bugs are fixed, but it is 
 
 Another issue is the it cannot handle web pages that are supposed to be rendered in a browser (e.g. single-page applications).
 For these pages, you can use =orgabilize-save-file-as-url= command to save an offline version as a URL.
-A more thorough solution would be to integrate with a headless browser, but it is not going to be part of this package.
+A more thorough solution would be to integrate with a headless browser, but I don't have an implementation plan for it yet.
 ** Todo
 - [ ] Improve the Org conversion
   - [ ] Add tests
