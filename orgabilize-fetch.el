@@ -90,7 +90,8 @@ The returned buffer will be in `fundamental-mode'.
 If the retrieval fails due to timeout or other kind of errors,
 nil is returned."
   (catch 'fetched
-    (let ((cache-file (orgabilize--html-cache-file url)))
+    (let ((cache-file (orgabilize--html-cache-file url))
+          (coding-system-for-read 'utf-8))
       (if (file-exists-p cache-file)
           (with-current-buffer (generate-new-buffer "*Orgabilize Src*")
             (insert-file-contents cache-file)
