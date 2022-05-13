@@ -142,11 +142,20 @@ The argument should be an HTML dom as parsed using
               (a
                (if (equal children '("#"))
                    nil
-                 (if-let (href (alist-get 'href attrs))
-                     (->> (org-ml-build-link href)
-                          (org-ml-set-children (unwrap-inlines (go-inline children)))
-                          (orgabilize-org-wrap-branch))
-                   (go-inline children))))
+                 (let ((content (go-inline children)))
+                   ;; If any of the child element is not an inline element that
+                   ;; is not an img element, don't enclose it with a link.
+                   (if (-any (lambda (c)
+                               (and (orgabilize-org-branch-p c)
+                                    (not (memq (car (orgabilize-org-branch-element c))
+                                               (cdr (assq 'link org-element-object-restrictions))))))
+                             content)
+                       content
+                     (if-let (href (alist-get 'href attrs))
+                         (->> (org-ml-build-link href)
+                              (org-ml-set-children (unwrap-inlines content))
+                              (orgabilize-org-wrap-branch))
+                       content)))))
               (img
                ;; TODO: Download images using org-download
                (orgabilize-org-wrap-branch
