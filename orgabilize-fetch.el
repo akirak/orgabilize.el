@@ -35,7 +35,6 @@
 (require 'dash)
 (require 'orgabilize-utils)
 (require 'org)
-(require 'mule-cmds)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
