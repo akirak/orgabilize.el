@@ -35,6 +35,7 @@
 (require 'dash)
 (require 'orgabilize-utils)
 (require 'org)
+(require 'mule-cmds)
 
 ;; Silence byte compiler
 (defvar url-http-end-of-headers)
@@ -102,6 +103,7 @@ nil is returned."
           (unless (buffer-live-p buffer)
             (throw 'fetched nil))
           (with-current-buffer buffer
+            (toggle-enable-multibyte-characters t)
             (when (bound-and-true-p url-http-end-of-headers)
               (delete-region (point-min)
                              (if (markerp url-http-end-of-headers)
