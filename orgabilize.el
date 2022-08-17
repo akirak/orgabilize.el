@@ -79,11 +79,7 @@ items fo the value.
 If CHECKBOX is non-nil, add an empty checkbox to each item."
   (interactive (let ((url (read-string "Url: ")))
                  (if current-prefix-arg
-                     (list url
-                           :include-header (yes-or-no-p "Include items in the header? ")
-                           :with-link (yes-or-no-p "With link? ")
-                           :depth (read-number "Depth (0 to unlimited): ")
-                           :checkbox (yes-or-no-p "Add checkboxes? "))
+                     (cons url (orgabilize--read-toc-options))
                    (list url))))
   (let ((url (orgabilize--url-for-link url)))
     (insert (mapconcat (lambda (x)
@@ -108,6 +104,31 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
                                      t)))
                        "\n")
             "\n")))
+
+(defun orgabilize--read-toc-options ()
+  "Return a plist for TOC options."
+  (list :include-header (yes-or-no-p "Include items in the header? ")
+        :with-link (yes-or-no-p "With link? ")
+        :depth (read-number "Depth (0 to unlimited): ")
+        :checkbox (yes-or-no-p "Add checkboxes? ")))
+
+;;;###autoload
+(defun orgabilize-insert-org-toc-for-headline ()
+  "Insert the TOC for the URL of the headline."
+  (interactive)
+  (unless (and (derived-mode-p 'org-mode)
+               (not (org-before-first-heading-p)))
+    (user-error "Not in org-mode or before the first headline"))
+  (let ((headline (org-get-heading t t t t)))
+    (save-match-data
+      (if (and (string-match org-link-bracket-re headline)
+               (string-match-p (rx bol "http" (?  "s") ":")
+                               (match-string 1 headline)))
+          (apply #'orgabilize-insert-org-toc
+                 (match-string 1 headline)
+                 (when current-prefix-arg
+                   (orgabilize--read-toc-options)))
+        (user-error "The headline is not a link or not an HTTP(S) url")))))
 
 ;;;###autoload
 (defun orgabilize-view-source (url)
