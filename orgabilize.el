@@ -55,7 +55,7 @@
   "Insert an Org link for URL."
   (interactive (list (read-string "Url: ")
                      current-prefix-arg))
-  (insert (orgabilize-make-link-string url)))
+  (insert (orgabilize-make-link-string url fragment)))
 
 (defun orgabilize-make-link-string (url &optional fragment)
   "Return an Org link string for URL."
