@@ -51,11 +51,26 @@
   :type 'boolean)
 
 ;;;###autoload
-(defun orgabilize-insert-org-link (url)
+(defun orgabilize-insert-org-link (url &optional fragment)
   "Insert an Org link for URL."
-  (interactive "sUrl: ")
-  (insert (org-link-make-string (orgabilize--url-for-link url)
-                                (orgabilize-document-title url))))
+  (interactive (list (read-string "Url: ")
+                     current-prefix-arg))
+  (insert (orgabilize-make-link-string url)))
+
+(defun orgabilize-make-link-string (url &optional fragment)
+  "Return an Org link string for URL."
+  (let ((clean-url (orgabilize--url-for-link url)))
+    (if fragment
+        (if-let (fragment (orgabilize-document-fragment url))
+            (org-link-make-string (concat (orgabilize--url-for-link url)
+                                          "#" fragment)
+                                  (or (orgabilize-document-fragment-title
+                                       url fragment)
+                                      (orgabilize-document-title url)))
+          (org-link-make-string (orgabilize--url-for-link url)
+                                (orgabilize-document-title url)))
+      (org-link-make-string (orgabilize--url-for-link url)
+                            (orgabilize-document-title url)))))
 
 ;;;###autoload
 (cl-defun orgabilize-insert-org-toc (url &key include-header with-link
