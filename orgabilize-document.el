@@ -50,6 +50,20 @@
   :group 'orgabilize
   :type '(repeat string))
 
+(defcustom orgabilize-title-escape-alist
+  `((,(rx (+ space)) . ""))
+  "Alist of regexp replacements used to escape title strings.
+
+Some characters are problematic in Org mode. This custom variable
+allows you to add extra patterns that should be eliminated from
+titles in Org.
+
+Replacements are performed in sequence.
+
+The default escaping is to convert whitespaces (including tabs
+and newlines) into a single space."
+  :type '(alist :key-type regexp :value-type string))
+
 ;;;; Variables
 (defvar orgabilize-document-tracker nil)
 
@@ -336,8 +350,16 @@ from the file. This is intended for testing."
 ;;;; Private utility functions
 
 (defun orgabilize-document--escape-title (string)
-  ;; Convert whitespaces (including tabs and newlines) into a single space
-  (replace-regexp-in-string (rx (+ space)) " " string))
+  "Escape STRING as a title."
+  (if orgabilize-title-escape-alist
+      (with-temp-buffer
+        (insert string)
+        (pcase-dolist (`(,regexp . ,replacement)
+                       orgabilize-title-escape-alist)
+          (goto-char (point-min))
+          (replace-regexp regexp replacement))
+        (buffer-string))
+    string))
 
 (provide 'orgabilize-document)
 ;;; orgabilize-document.el ends here
