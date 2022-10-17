@@ -322,9 +322,10 @@ from the file. This is intended for testing."
                                tag fragment)))))
                 (dolist (child children)
                   (go child)))))))
-      (go (thread-last
-            (orgabilize-document-for-url url)
-            (orgabilize-document-dom))))))
+      (orgabilize-document--escape-title
+       (go (thread-last
+             (orgabilize-document-for-url url)
+             (orgabilize-document-dom)))))))
 
 (defun orgabilize-document-fragment (url)
   "Return the fragment of URL, if any."
