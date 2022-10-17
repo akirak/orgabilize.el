@@ -102,12 +102,20 @@ nil is returned."
           (unless (buffer-live-p buffer)
             (throw 'fetched nil))
           (with-current-buffer buffer
-            (toggle-enable-multibyte-characters t)
             (when (bound-and-true-p url-http-end-of-headers)
+              (let ((case-fold-search t))
+                (when (and (re-search-forward (rx bol "content-type: "
+                                                  (group (+ (not (any "\n;")))))
+                                              url-http-end-of-headers t)
+                           (not (equal (match-string 1) "text/html")))
+                  (message "This URL has %s mime type, so it can't be processed"
+                           (match-string 1))
+                  (throw 'fetched nil)))
               (delete-region (point-min)
                              (if (markerp url-http-end-of-headers)
                                  (marker-position url-http-end-of-headers)
                                url-http-end-of-headers)))
+            (toggle-enable-multibyte-characters t)
             ;; Trim preceding spaces (including newlines).
             (goto-char (point-min))
             (save-match-data
