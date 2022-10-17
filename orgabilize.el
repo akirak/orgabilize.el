@@ -43,6 +43,7 @@
 
 (defgroup orgabilize nil
   "Converts web pages into Org."
+  :prefix "orgabilize-"
   :group 'org)
 
 (defcustom orgabilize-use-canonical-urls t

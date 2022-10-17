@@ -42,12 +42,12 @@
 
 (defcustom orgabilize-executable "readable"
   "Path to the executable of readability-cli."
-  :group 'readable
+  :group 'orgabilize
   :type 'file)
 
 (defcustom orgabilize-args '("--keep-classes")
   "List of command line arguments passed to readability-cli."
-  :group 'readable
+  :group 'orgabilize
   :type '(repeat string))
 
 ;;;; Variables

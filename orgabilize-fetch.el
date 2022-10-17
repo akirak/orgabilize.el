@@ -42,18 +42,18 @@
 (defcustom orgabilize-cache-directory
   (expand-file-name "orgabilize/cache" user-emacs-directory)
   "Directory in which content cache are stored."
-  :group 'readable
+  :group 'orgabilize
   :type 'directory)
 
 (defcustom orgabilize-download-timeout 3
   "Timeout of HTTP requests in seconds."
-  :group 'readable
+  :group 'orgabilize
   :type 'number)
 
 (defcustom orgabilize-fetch-log-file
   (expand-file-name "orgabilize/fetch.log" user-emacs-directory)
   "File to which fetched URLs are logged."
-  :group 'readable
+  :group 'orgabilize
   :type 'file)
 
 (defun orgabilize--file-escape-url (url)
