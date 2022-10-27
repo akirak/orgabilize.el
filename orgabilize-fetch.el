@@ -104,6 +104,7 @@ nil is returned."
           (with-current-buffer buffer
             (when (bound-and-true-p url-http-end-of-headers)
               (let ((case-fold-search t))
+                (goto-char (point-min))
                 (when (and (re-search-forward (rx bol "content-type: "
                                                   (group (+ (not (any "\n;")))))
                                               url-http-end-of-headers t)
