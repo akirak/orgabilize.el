@@ -51,7 +51,7 @@
   :type '(repeat string))
 
 (defcustom orgabilize-title-escape-alist
-  `((,(rx (+ space)) . ""))
+  `((,(rx (+ space)) . " "))
   "Alist of regexp replacements used to escape title strings.
 
 Some characters are problematic in Org mode. This custom variable
