@@ -36,7 +36,6 @@
 (require 'eieio)
 (require 'eieio-base)
 (require 'xml)
-(require 'xmltok)
 (require 'sgml-mode)
 
 ;;;; Custom variables
@@ -198,13 +197,8 @@ from the file. This is intended for testing."
             (when (re-search-forward (rx "<title") nil t)
               (goto-char (car (match-data)))
               (xmltok-forward)
-              (let ((start (point))
-                    (end (progn
-                           (xmltok-forward)
-                           (point))))
-                (orgabilize-document--escape-title
-                 (orgabilize-decode-entity
-                  (buffer-substring-no-properties start end)))))))))))
+              (orgabilize-document--escape-title
+               (orgabilize--parse-sgml-text)))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))
