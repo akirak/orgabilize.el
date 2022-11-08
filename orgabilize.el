@@ -167,7 +167,8 @@ You can also add this function to `org-ctrl-c-ctrl-c-hook'."
   (interactive)
   (when (derived-mode-p 'org-mode)
     (save-match-data
-      (when (thing-at-point-looking-at org-link-bracket-re)
+      (cond
+       ((thing-at-point-looking-at org-link-bracket-re)
         (let* ((m (match-data))
                (url (match-string 1))
                (title (when (and (not (match-string 2))
@@ -176,7 +177,15 @@ You can also add this function to `org-ctrl-c-ctrl-c-hook'."
           (when title
             (delete-region (nth 0 m) (nth 1 m))
             (insert (org-link-make-string url title))
-            t))))))
+            t)))
+       ((thing-at-point-looking-at org-link-plain-re)
+        (let* ((m (match-data))
+               (url (match-string 0))
+               (title (orgabilize-document-title url)))
+          (when title
+            (delete-region (nth 0 m) (nth 1 m))
+            (insert (org-link-make-string url title))
+            t)))))))
 
 (defun orgabilize--url-for-link (url)
   "Return a URL for linking."
