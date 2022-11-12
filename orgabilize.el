@@ -58,20 +58,17 @@
                      current-prefix-arg))
   (insert (orgabilize-make-link-string url fragment)))
 
-(defun orgabilize-make-link-string (url &optional fragment)
+(defun orgabilize-make-link-string (url &optional add-fragment)
   "Return an Org link string for URL."
   (let ((clean-url (orgabilize--url-for-link url)))
-    (if fragment
+    (if add-fragment
         (if-let (fragment (orgabilize-document-fragment url))
-            (org-link-make-string (concat (orgabilize--url-for-link url)
-                                          "#" fragment)
+            (org-link-make-string (concat clean-url "#" fragment)
                                   (or (orgabilize-document-fragment-title
                                        url fragment)
                                       (orgabilize-document-title url)))
-          (org-link-make-string (orgabilize--url-for-link url)
-                                (orgabilize-document-title url)))
-      (org-link-make-string (orgabilize--url-for-link url)
-                            (orgabilize-document-title url)))))
+          (org-link-make-string clean-url (orgabilize-document-title url)))
+      (org-link-make-string clean-url (orgabilize-document-title url)))))
 
 ;;;###autoload
 (cl-defun orgabilize-insert-org-toc (url &key include-header with-link

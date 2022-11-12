@@ -62,6 +62,7 @@ Replacements are performed in sequence.
 
 The default escaping is to convert whitespaces (including tabs
 and newlines) into a single space."
+  :group 'orgabilize
   :type '(alist :key-type regexp :value-type string))
 
 ;;;; Variables
@@ -317,7 +318,7 @@ from the file. This is intended for testing."
            (catch 'heading
              (dolist (node nodes)
                (pcase node
-                 (`(,tag ,attrs . ,children)
+                 (`(,tag ,_attrs . ,_children)
                   (when (memq tag '(h1 h2 h3 h4 h5 h6))
                     (throw 'heading node)))))))
          (go (node)
@@ -358,7 +359,8 @@ from the file. This is intended for testing."
         (pcase-dolist (`(,regexp . ,replacement)
                        orgabilize-title-escape-alist)
           (goto-char (point-min))
-          (replace-regexp regexp replacement))
+          (while (re-search-forward regexp nil t)
+            (replace-match replacement)))
         (buffer-string))
     string))
 
