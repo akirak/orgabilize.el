@@ -38,5 +38,15 @@
       localPackages = [
         "orgabilize"
       ];
+
+      scripts.test = {
+        extraPackages = [
+          "buttercup"
+        ];
+
+        text = ''
+          emacs -batch -L . -l buttercup -f buttercup-run-discover
+        '';
+      };
     };
 }
