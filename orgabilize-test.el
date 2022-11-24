@@ -45,4 +45,12 @@
                 "https://developer.mozilla.org/en-US/docs/Web/API/CSS_Object_Model/Managing_screen_orientation"))
               :to-be-truthy))))
 
+(describe "Fragments"
+  (describe "orgabilize-document-fragment-title"
+    (it "returns the heading of a fragment with the ID"
+      (expect (orgabilize-document-fragment-title
+               "https://cabal.readthedocs.io/en/3.4/cabal-project.html"
+               "specifying-the-local-packages")
+              :to-equal "8.1. Specifying the local packages"))))
+
 (provide 'orgabilize-test)

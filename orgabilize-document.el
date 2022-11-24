@@ -332,16 +332,17 @@ from the file. This is intended for testing."
                     (otherwise
                      (pcase (find-heading children)
                        (`(,_ ,_ . ,heading-children)
-                        (inner-text-as-string heading-children))
+                        (throw 'return-value (inner-text-as-string heading-children)))
                        (_
                         (error "A %s element found with fragment %s, but no heading found in it"
                                tag fragment)))))
                 (dolist (child children)
                   (go child)))))))
       (orgabilize-document--escape-title
-       (go (thread-last
-             (orgabilize-document-for-url url)
-             (orgabilize-document-dom)))))))
+       (catch 'return-value
+         (go (thread-last
+               (orgabilize-document-for-url url)
+               (orgabilize-document-dom))))))))
 
 (defun orgabilize-document-fragment (url)
   "Return the fragment of URL, if any."
