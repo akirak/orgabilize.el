@@ -96,6 +96,12 @@ nil is returned."
           (with-current-buffer (generate-new-buffer "*Orgabilize Src*")
             (insert-file-contents cache-file)
             (current-buffer))
+        (dolist (dir (thread-last
+                       (list orgabilize-fetch-log-file cache-file)
+                       (mapcar #'file-name-directory)
+                       (seq-uniq)))
+          (unless (file-directory-p dir)
+            (make-directory dir t)))
         (let ((buffer (url-retrieve-synchronously
                        url t t
                        orgabilize-download-timeout)))
