@@ -157,31 +157,28 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
         (user-error "There is no source for the url")))))
 
 ;;;###autoload
-(defun orgabilize-update-link-title ()
+(defun orgabilize-update-link-title (&optional fragment)
   "Update the title of the link at point.
 
 You can also add this function to `org-ctrl-c-ctrl-c-hook'."
-  (interactive)
+  (interactive "P")
   (when (derived-mode-p 'org-mode)
     (save-match-data
       (cond
        ((thing-at-point-looking-at org-link-bracket-re)
-        (let* ((m (match-data))
-               (url (match-string 1))
-               (title (when (and (not (match-string 2))
-                                 (string-match-p (rx bol "http" (?  "s") ":") url))
-                        (orgabilize-document-title url))))
-          (when title
+        (let ((m (match-data))
+              (url (match-string 1)))
+          (when (and (not (match-string 2))
+                     (string-match-p (rx bol "http" (?  "s") ":") url))
             (delete-region (nth 0 m) (nth 1 m))
-            (insert (org-link-make-string url title))
+            (insert (orgabilize-make-link-string url fragment))
             t)))
        ((thing-at-point-looking-at org-link-plain-re)
         (let* ((m (match-data))
-               (url (match-string 0))
-               (title (orgabilize-document-title url)))
-          (when title
+               (url (match-string 0)))
+          (when (orgabilize-document-title url)
             (delete-region (nth 0 m) (nth 1 m))
-            (insert (org-link-make-string url title))
+            (insert (orgabilize-make-link-string url fragment))
             t)))))))
 
 (defun orgabilize--url-for-link (url)
