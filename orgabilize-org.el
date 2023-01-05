@@ -568,8 +568,7 @@ at LEVEL, with optional TAGS."
           (when-let (excerpt (oref document excerpt))
             (org-ml-insert (point)
                            (org-ml-build-special-block
-                            "excerpt"
-                            (org-ml-build-paragraph! excerpt))))
+                            "excerpt" (org-ml-build-paragraph excerpt))))
           (setq buffer-file-name outfile)
           (org-mode)))
       (let ((buffer (or existing new-buffer)))
