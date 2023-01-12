@@ -480,6 +480,13 @@ The argument should be an HTML dom as parsed using
        :head-content (set-post-blank head-content)
        :subheadlines (set-subheadlines subheadlines-with-lvs)))))
 
+(cl-defun orgabilize-org--fragment (dom &key src-language url-without-fragment)
+  (declare (indent 1))
+  (thread-first
+    dom
+    (orgabilize-org--parse-dom :src-language src-language)
+    (orgabilize-org--to-fragment :url-without-fragment url-without-fragment)))
+
 (cl-defun orgabilize-org--build-headline (dom &key title level tags
                                               url-without-fragment
                                               src-language)
@@ -488,10 +495,9 @@ The argument should be an HTML dom as parsed using
 DOM must be an html dom. It constructs an Org headline with TITLE
 at LEVEL, with optional TAGS."
   (declare (indent 1))
-  (let ((fragment (-> (orgabilize-org--parse-dom
-                       dom :src-language src-language)
-                      (orgabilize-org--to-fragment
-                       :url-without-fragment url-without-fragment))))
+  (let ((fragment (orgabilize-org--fragment dom
+                    :src-language src-language
+                    :url-without-fragment url-without-fragment)))
     (apply #'org-ml-build-headline!
            :level level
            :title-text title
@@ -618,6 +624,107 @@ at LEVEL, with optional TAGS."
   (let ((url (read-string "Url: ")))
     (orgabilize-save-file-as-url file url)
     (funcall-interactively #'orgabilize-org-archive url)))
+
+;;;###autoload
+(cl-defun orgabilize-org-insert-navigation (url &key (checkbox 'off) depth)
+  "Insert a list of navigation links from the document.
+
+This command extracts a ul/ol element (or elements) from a nav
+element in the document, convert the list(s) into Org, and insert
+the result into the current Org buffer.
+
+URL is the document or the URL.
+
+Interactively, CHECKBOX is set to 'off by default, which means an
+empty checkbox is prepended to each list item. For other possible
+values, take a look at the documentation of `org-ml-build-item'.
+
+If DEPTH is a positive integer, items at more than the level will
+not be inserted.For example, if the depth is 1, a flat list will
+be inserted."
+  (interactive "sUrl: ")
+  (unless (derived-mode-p 'org-mode)
+    (user-error "You must run this command inside org-mode"))
+  (let ((url (orgabilize-clean-url-string url)))
+    (dolist (dom (orgabilize-org--select-nav-lists url))
+      (thread-last
+        (orgabilize-org--list-to-org dom
+          url :checkbox checkbox :depth depth)
+        (org-ml-to-string)
+        (insert)))
+    (delete-region (pos-eol 0) (point))
+    (beginning-of-line 2)))
+
+(cl-defun orgabilize-org--list-to-org (dom base-url &key checkbox depth)
+  (declare (indent 1))
+  (cl-labels
+      ((itemp (node)
+         (and (listp node)
+              (eq 'li (car node))))
+       (allowed-list-content-p (level node)
+         (or (and (stringp node)
+                  (not (string-match-p (rx bos (* (any "\n\r\t ")) eos) node)))
+             (and (listp node)
+                  (or (eq (car node) 'a)
+                      (and (memq (car node) '(ul ol))
+                           (not (and depth (= depth level))))))))
+       (build-list-content (level node)
+         (pcase-exhaustive node
+           ((pred stringp)
+            (org-ml-build-paragraph (string-trim node)))
+           (`(a ,attrs . ,contents)
+            (if-let (href (cdr (assq 'href attrs)))
+                (org-ml-build-paragraph
+                 (apply #'org-ml-build-link
+                        (if (string-prefix-p "#" href)
+                            (concat base-url href)
+                          (url-expand-file-name href base-url))
+                        (mapcar #'string-trim contents)))
+              (apply #'org-ml-build-paragraph
+                     (mapcar #'string-trim contents))))
+           ((and `(,tag . ,_)
+                 (guard (memq tag '(ul ol))))
+            (go-list (1+ level) node))))
+       (build-item (level node)
+         (apply #'org-ml-build-item
+                :checkbox checkbox
+                (thread-last
+                  (cddr node)
+                  (-filter (-partial #'allowed-list-content-p level))
+                  (-map (-partial #'build-list-content level)))))
+       (go-list (level node)
+         (apply #'org-ml-build-plain-list
+                (thread-last
+                  (cddr node)
+                  (-filter #'itemp)
+                  (-map (-partial #'build-item level))))))
+    (go-list 1 dom)))
+
+(defun orgabilize-org--select-nav-lists (url)
+  (cl-labels
+      ((to-nav-candidate (node)
+         (pcase node
+           (`(,_ ,attrs . ,_)
+            (cons (cdr (assq 'aria-label attrs))
+                  node))))
+       (to-list-candidate (node)
+         (cons (prin1-to-string node)
+               node))
+       (choose (prompt alist)
+         (if (= 1 (length alist))
+             (cdar alist)
+           (cdr (assoc (completing-read prompt alist nil t)
+                       alist))))
+       (select-lists (node)
+         (orgabilize-select-xml-nodes-by-tags '(ul ol) node)))
+    (thread-last
+      (orgabilize-document--parse-all url)
+      (orgabilize-select-xml-nodes-by-tags '(nav))
+      (-map #'to-nav-candidate)
+      (choose "Select a nav element: ")
+      (cddr)
+      (-map #'select-lists)
+      (-flatten-n 1))))
 
 ;;;; Browsing the archive
 

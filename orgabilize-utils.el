@@ -72,5 +72,19 @@
            (push (buffer-substring-no-properties xmltok-start (point)) tokens)))))
     (string-join (nreverse tokens))))
 
+(defun orgabilize-select-xml-nodes-by-tags (tags root)
+  (declare (indent 1))
+  (let (candidates)
+    (cl-labels
+        ((scan (node)
+           (pcase node
+             (`(,tag1 ,attrs . ,children)
+              (if (memq tag1 tags)
+                  (push node candidates)
+                (dolist (child children)
+                  (scan child)))))))
+      (scan root)
+      (nreverse candidates))))
+
 (provide 'orgabilize-utils)
 ;;; orgabilize-utils.el ends here
