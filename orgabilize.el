@@ -143,6 +143,17 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
                    (orgabilize--read-toc-options)))
         (user-error "The headline is not a link or not an HTTP(S) url")))))
 
+(defun orgabilize-insert-with-aria-label (url)
+  "Select a content with an aria label and insert it into Org."
+  (interactive "sUrl: ")
+  (let ((dom (orgabilize-select-by-aria-label url))
+        (level (1+ (org-outline-level))))
+    (dolist (child (cddr dom))
+      (orgabilize-org--build-headline child)
+      )
+    )
+  )
+
 ;;;###autoload
 (defun orgabilize-view-source (url)
   (interactive "sUrl: ")

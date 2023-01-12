@@ -373,6 +373,22 @@ from the file. This is intended for testing."
     (when (string-match (rx "#" (group (+ anything))) url)
       (match-string 1 url))))
 
+;;;; Part of a document
+
+(defun orgabilize-select-by-aria-label (url prompt)
+  (let (candidates)
+    (cl-labels
+        ((scan (node)
+           (pcase node
+             (`(,_ ,attrs . ,children)
+              (when-let (label (alist-get 'aria-label attrs))
+                (push (cons label node)
+                      candidates))
+              (dolist (child children)
+                (scan child))))))
+      (scan (orgabilize-document--parse-all url))
+      (cdr (assoc (completing-read prompt candidates nil t) candidates)))))
+
 ;;;; Private utility functions
 
 (defun orgabilize-document--escape-title (string)
