@@ -113,6 +113,22 @@ original content body of the url. This is intended for testing."
     (json-parse-buffer :object-type 'alist
                        :null-object nil)))
 
+;;;; Fallback for documents that readable fails to process
+
+(defun orgabilize-document--parse-all (url)
+  (orgabilize-with-source-as-buffer url
+    (libxml-parse-html-region (point-min) (point-max) url)))
+
+(defun orgabilize-document--main (dom)
+  (cl-labels
+      ((go (node)
+         (pcase node
+           (`(main . ,_)
+            node)
+           (`(,_ ,_ . ,children)
+            (seq-some #'go children)))))
+    (go dom)))
+
 ;;;; orgabilize-document class
 
 (defclass orgabilize-document (eieio-instance-tracker)
@@ -167,7 +183,11 @@ from the file. This is intended for testing."
   "Return the html dom of the content of X.")
 (cl-defmethod orgabilize-document-dom ((url string))
   "Return the html dom of the content of URL."
-  (orgabilize-document-dom (orgabilize-document-for-url url)))
+  (condition-case _
+      (orgabilize-document-dom (orgabilize-document-for-url url))
+    (error (or (orgabilize-document--main
+                (orgabilize-document--parse-all url))
+               (error "The document contains no main element")))))
 (cl-defmethod orgabilize-document-dom ((x orgabilize-document))
   "Return the html dom of the content of X."
   (with-temp-buffer
