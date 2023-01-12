@@ -19,6 +19,10 @@
       (expect (orgabilize-document-fragment-title
                "https://cabal.readthedocs.io/en/3.4/cabal-project.html"
                "specifying-the-local-packages")
-              :to-equal "8.1. Specifying the local packages"))))
+              :to-equal "8.1. Specifying the local packages")
+      (expect (orgabilize-document-fragment-title
+               "https://en.wikipedia.org/wiki/Logic"
+               "Systems_of_logic")
+              :to-equal "Systems of logic[edit]"))))
 
 (provide 'orgabilize-test)

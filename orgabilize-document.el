@@ -338,29 +338,40 @@ from the file. This is intended for testing."
              (`(,_ ,_ . ,children)
               (inner-text-as-string children))))
          (find-heading (nodes)
-           (catch 'heading
-             (dolist (node nodes)
-               (pcase node
-                 (`(,tag ,_attrs . ,_children)
-                  (when (memq tag '(h1 h2 h3 h4 h5 h6))
-                    (throw 'heading node)))))))
+           (dolist (node nodes)
+             (pcase node
+               (`(,tag ,_attrs . ,children)
+                (when (memq tag '(h1 h2 h3 h4 h5 h6))
+                  (throw 'heading node))
+                (find-heading children)))))
+         (contains-id (node)
+           (catch 'has-id
+             (pcase node
+               (`(,_ ,attrs . ,children)
+                (if (equal (cdr (assq 'id attrs))
+                           fragment)
+                    (throw 'has-id node)
+                  (seq-find #'contains-id children))))))
          (go (node)
            (pcase node
              (`(,tag ,attrs . ,children)
-              (if (equal (cdr (assq 'id attrs))
-                         fragment)
-                  (cl-case tag
-                    ((h1 h2 h3 h4 h5 h6)
-                     (throw 'fragment-title (inner-text-as-string children)))
-                    (otherwise
-                     (pcase (find-heading children)
-                       (`(,_ ,_ . ,heading-children)
-                        (throw 'return-value (inner-text-as-string heading-children)))
-                       (_
-                        (error "A %s element found with fragment %s, but no heading found in it"
-                               tag fragment)))))
-                (dolist (child children)
-                  (go child)))))))
+              (cond
+               ((memq tag '(h1 h2 h3 h4 h5 h6))
+                (when (or (equal (cdr (assq 'id attrs))
+                                 fragment)
+                          (seq-find #'contains-id children))
+                  (throw 'fragment-title (inner-text-as-string children))))
+               ((equal (cdr (assq 'id attrs))
+                       fragment)
+                (pcase (catch 'heading
+                         (find-heading children))
+                  (`(,_ ,_ . ,heading-children)
+                   (throw 'return-value (inner-text-as-string heading-children)))
+                  (_
+                   (error "A %s element found with fragment %s, but no heading found in it"
+                          tag fragment))))
+               (t
+                (mapc #'go children)))))))
       (orgabilize-document--escape-title
        (catch 'return-value
          (go (thread-last
