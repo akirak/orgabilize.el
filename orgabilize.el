@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'orgabilize-document)
+(require 'orgabilize-org)
 (require 'dash)
 (require 'ol)
 

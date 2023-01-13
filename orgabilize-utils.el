@@ -78,7 +78,7 @@
     (cl-labels
         ((scan (node)
            (pcase node
-             (`(,tag1 ,attrs . ,children)
+             (`(,tag1 ,_attrs . ,children)
               (if (memq tag1 tags)
                   (push node candidates)
                 (dolist (child children)

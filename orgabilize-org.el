@@ -636,7 +636,7 @@ the result into the current Org buffer.
 
 URL is the document or the URL.
 
-Interactively, CHECKBOX is set to 'off by default, which means an
+Interactively, CHECKBOX is set to \\='off by default, which means an
 empty checkbox is prepended to each list item. For other possible
 values, take a look at the documentation of `org-ml-build-item'.
 
