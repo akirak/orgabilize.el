@@ -717,15 +717,20 @@ be inserted."
            (cdr (assoc (completing-read prompt alist nil t)
                        alist))))
        (select-lists (node)
-         (orgabilize-select-xml-nodes-by-tags '(ul ol) node)))
+         (orgabilize-select-xml-nodes-by-tags '(ul ol) node))
+       (assert-not-null (msg x)
+         (cl-assert x nil msg)
+         x))
     (thread-last
       (orgabilize-document--parse-all url)
       (orgabilize-select-xml-nodes-by-tags '(nav))
+      (assert-not-null "No nav element in the document")
       (-map #'to-nav-candidate)
       (choose "Select a nav element: ")
       (cddr)
       (-map #'select-lists)
-      (-flatten-n 1))))
+      (-flatten-n 1)
+      (assert-not-null "No list in the nav element"))))
 
 ;;;; Browsing the archive
 
