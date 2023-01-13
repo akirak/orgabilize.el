@@ -32,6 +32,7 @@
 (require 'cl-lib)
 (require 'org-ml)
 (require 'orgabilize-document)
+(require 'orgabilize-utils)
 
 (defconst orgabilize-org-origin-url-property
   "ORGABILIZE_ORIGIN_URL")
