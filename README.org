@@ -17,22 +17,28 @@ On the other hand, *orgabilize is less reliable than org-web-tools*, because it 
 It also cannot read the contents of client-rendered web pages, but it can still read titles and metadata from them.
 See [[#limitations][Limitations]] for details.
 ** Installation
-Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
+This package is not available from any package registry yet.
+Install the package from source using =package-vc= (built-in since Emacs 29) or its alternative.
+
+You also have to install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
+I don't provide an instruction for installing the program.
 ** Configuration
+Set =orgabilize-executable= to the name of the executable of readability-cli.
 ** Usage
 :PROPERTIES:
 :CREATED_TIME: [2021-04-11 Sun 13:14]
 :END:
 *** Inserting a link
-Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its title.
-*** Inserting a table of contents
-Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
+To insert a link to a web page with its title into an Org buffer, use =orgabilize-insert-org-link=.
+*** Inserting a table of contents into an Org buffer
+To insert a list of headings in a web page, use =orgabilize-insert-org-toc=.
 
 To insert a list of links in a =nav= element from a web site, use =orgabilize-insert-toc-from-nav=.
 First type a URL, and then select a nav element with its =aria-label= attribute.
 This is typically useful for inserting the table of contents of an entire website.
-*** Archiving to a directory
-Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
+*** Archiving a web page to an Org file in a directory
+To convert a web page to Org, use =orgabilize-org-archive= command.
+The buffer is saved to a file in =orgabilize-org-archive-directory=.
 ** Limitations
 :PROPERTIES:
 :CUSTOM_ID: limitations
