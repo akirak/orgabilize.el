@@ -626,7 +626,6 @@ at LEVEL, with optional TAGS."
     (orgabilize-save-file-as-url file url)
     (funcall-interactively #'orgabilize-org-archive url)))
 
-;;;###autoload
 (cl-defun orgabilize-org-insert-navigation (url &key (checkbox 'off) depth)
   "Insert a list of navigation links from the document.
 
@@ -643,9 +642,6 @@ values, take a look at the documentation of `org-ml-build-item'.
 If DEPTH is a positive integer, items at more than the level will
 not be inserted.For example, if the depth is 1, a flat list will
 be inserted."
-  (interactive "sUrl: ")
-  (unless (derived-mode-p 'org-mode)
-    (user-error "You must run this command inside org-mode"))
   (let ((url (orgabilize-clean-url-string url)))
     (dolist (dom (orgabilize-org--select-nav-lists url))
       (thread-last

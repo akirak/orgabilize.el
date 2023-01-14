@@ -145,6 +145,14 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
         (user-error "The headline is not a link or not an HTTP(S) url")))))
 
 ;;;###autoload
+(cl-defun orgabilize-insert-toc-from-nav (url)
+  "Insert a list of links in a nav element from a URL."
+  (interactive "sUrl: ")
+  (unless (derived-mode-p 'org-mode)
+    (user-error "You must run this command inside org-mode"))
+  (orgabilize-org-insert-navigation url))
+
+;;;###autoload
 (defun orgabilize-view-source (url)
   (interactive "sUrl: ")
   (let ((buffer-name (format "*Orgabilize<%s>*" url)))
