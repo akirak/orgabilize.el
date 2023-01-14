@@ -27,6 +27,10 @@ Install [[https://gitlab.com/gardenappl/readability-cli][readability-cli]].
 Use =orgabilize-insert-org-link= to insert a link into an Org buffer with its title.
 *** Inserting a table of contents
 Use =orgabilize-insert-org-toc= to insert the table of contents of a document into an Org buffer.
+
+To insert a list of links in a =nav= element from a web site, use =orgabilize-insert-toc-from-nav=.
+First type a URL, and then select a nav element with its =aria-label= attribute.
+This is typically useful for inserting the table of contents of an entire website.
 *** Archiving to a directory
 Run =orgabilize-org-archive= to convert a web page to Org and save it to a file in =orgabilize-org-archive-directory=.
 ** Limitations
