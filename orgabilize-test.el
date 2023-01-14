@@ -23,6 +23,10 @@
       (expect (orgabilize-document-fragment-title
                "https://en.wikipedia.org/wiki/Logic"
                "Systems_of_logic")
-              :to-equal "Systems of logic[edit]"))))
+              :to-equal "Systems of logic[edit]")
+      (expect (orgabilize-document-fragment-title
+               "https://v2.ocaml.org/manual/expr.html"
+               "ss:expr-operators")
+              :to-equal "7.5 Operators"))))
 
 (provide 'orgabilize-test)
