@@ -368,8 +368,9 @@ from the file. This is intended for testing."
                   (`(,_ ,_ . ,heading-children)
                    (throw 'return-value (inner-text-as-string heading-children)))
                   (_
-                   (error "A %s element found with fragment %s, but no heading found in it"
-                          tag fragment))))
+                   (message "A %s element found with fragment %s, but no heading found in it"
+                            tag fragment)
+                   (throw 'fragment-title nil))))
                (t
                 (mapc #'go children)))))))
       (orgabilize-document--escape-title

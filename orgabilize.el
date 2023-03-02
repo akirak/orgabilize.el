@@ -67,7 +67,8 @@
             (org-link-make-string (concat clean-url "#" fragment)
                                   (or (orgabilize-document-fragment-title
                                        url fragment)
-                                      (orgabilize-document-title url)))
+                                      (read-from-minibuffer
+                                       "Manually type the title of the fragment: ")))
           (org-link-make-string clean-url (orgabilize-document-title url)))
       (org-link-make-string clean-url (orgabilize-document-title url)))))
 
