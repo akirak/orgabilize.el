@@ -27,6 +27,10 @@
       (expect (orgabilize-document-fragment-title
                "https://v2.ocaml.org/manual/expr.html"
                "ss:expr-operators")
-              :to-equal "7.5 Operators"))))
+              :to-equal "7.5 Operators")
+      (expect (orgabilize-document-fragment-title
+               "https://hexdocs.pm/phoenix/channels.html"
+               "client-libraries")
+              :to-equal "client-libraries Client Libraries"))))
 
 (provide 'orgabilize-test)
