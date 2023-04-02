@@ -54,6 +54,8 @@
   ;; Anchor added in readthedocs.
   ;; Example: https://haskell4nix.readthedocs.io/nixpkgs-users-guide.html
   `((,(rx (* blank) "¶" eol) . "")
+    (,(rx bos (+ space)) . "")
+    (,(rx (+ space) eos) . "")
     (,(rx (+ space)) . " "))
   "Alist of regexp replacements used to escape title strings.
 
