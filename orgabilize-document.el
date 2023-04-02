@@ -362,7 +362,7 @@ from the file. This is intended for testing."
                 (when (or (equal (cdr (assq 'id attrs))
                                  fragment)
                           (seq-find #'contains-id children))
-                  (throw 'fragment-title (inner-text-as-string children))))
+                  (throw 'return-value (inner-text-as-string children))))
                ((equal (cdr (assq 'id attrs))
                        fragment)
                 (pcase (catch 'heading
