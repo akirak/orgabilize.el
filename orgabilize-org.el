@@ -371,14 +371,24 @@ The argument should be an HTML dom as parsed using
                                                       (string-empty-p (string-trim it))))
                                        (-non-nil)
                                        (-map #'go))))
-                 (if caption-text
-                     (condition-case nil
+                 (if rest
+                     (if caption-text
                          (cons (orgabilize-org-wrap-branch
                                 (->> (orgabilize-org-unwrap (car ochildren))
                                      (org-ml-set-caption! caption-text)))
                                (cdr ochildren))
-                       (error (error "Error: %s" (orgabilize-org-unwrap (car ochildren)))))
-                   ochildren)))
+                       ochildren)
+                   ;; figure contains only figcaption(s). This is likely an
+                   ;; invalid HTML, but the parser should fallback.
+                   (message "figure contains only figcaption: %s" x)
+                   (if caption-text
+                       (orgabilize-org-wrap-branch
+                        (->> (org-ml-build-paragraph)
+                             (org-ml-set-children (list caption-text))))
+                     (message "Empty figure element: " x)
+                     (orgabilize-org-wrap-branch
+                      (->> (org-ml-build-paragraph)
+                           (org-ml-set-children (list "error: empty figure element"))))))))
               (details
                (-let (((summaries rest) (--separate (pcase it
                                                       (`(,tag . ,_)
