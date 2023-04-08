@@ -458,7 +458,11 @@ The argument should be an HTML dom as parsed using
              (cons (org-ml-headline-set-subheadlines
                     (set-subheadlines descendants)
                     (cdr this))
-                   (set-subheadlines (copy-sequence rest2)))))))
+                   (set-subheadlines (copy-sequence rest2))))))
+       ;; A workaround to not build a list item from a headline with a section
+       ;; number. See https://github.com/ndwarshuis/org-ml/issues/45
+       (sanitize-headline-text (text)
+         (replace-regexp-in-string (rx bol (+ digit) ". ") "" text)))
     (let* ((partitions (-partition-before-pred #'orgabilize-org-headline-p branches))
            (head-content (when (and (car partitions)
                                     (not (orgabilize-org-headline-p (caar partitions))))
@@ -480,7 +484,8 @@ The argument should be an HTML dom as parsed using
                           (cons (orgabilize-org-headline-level h)
                                 (->> (org-ml-build-headline!
                                       :level (orgabilize-org-headline-level h)
-                                      :title-text (orgabilize-org-headline-text h)
+                                      :title-text (sanitize-headline-text
+                                                   (orgabilize-org-headline-text h))
                                       :post-blank 1
                                       :section-children
                                       (->> (if drawer
