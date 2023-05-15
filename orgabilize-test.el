@@ -31,6 +31,10 @@
       (expect (orgabilize-document-fragment-title
                "https://hexdocs.pm/phoenix/channels.html"
                "client-libraries")
-              :to-equal "client-libraries Client Libraries"))))
+              :to-equal "client-libraries Client Libraries")
+      (expect (orgabilize-document-fragment-title
+               "https://github.com/elixir-desktop/desktop/blob/main/guides/getting_started.md"
+               "gnulinux")
+              :to-be nil))))
 
 (provide 'orgabilize-test)
