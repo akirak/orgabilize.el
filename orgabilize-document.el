@@ -374,7 +374,8 @@ from the file. This is intended for testing."
                             tag fragment)
                    (throw 'fragment-title nil))))
                (t
-                (mapc #'go children)))))))
+                (mapc #'go children)
+                nil))))))
       (orgabilize-document--escape-title
        (catch 'return-value
          (go (thread-last
