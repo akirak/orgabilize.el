@@ -53,7 +53,7 @@
 (defcustom orgabilize-title-escape-alist
   ;; Anchor added in readthedocs.
   ;; Example: https://haskell4nix.readthedocs.io/nixpkgs-users-guide.html
-  `((,(rx (* blank) "¶" eol) . "")
+  `((,(rx (* blank) (any "¶") eol) . "")
     (,(rx bos (+ space)) . "")
     (,(rx (+ space) eos) . "")
     (,(rx (+ space)) . " "))
