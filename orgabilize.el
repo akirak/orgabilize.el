@@ -171,23 +171,22 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
   "Update the title of the link at point.
 
 You can also add this function to `org-ctrl-c-ctrl-c-hook'."
-  (interactive "P")
-  (when (derived-mode-p 'org-mode)
-    (save-match-data
-      (cond
-       ((thing-at-point-looking-at org-link-bracket-re)
-        (let ((m (match-data))
-              (url (match-string 1)))
-          (when (string-match-p (rx bol "http" (?  "s") ":") url)
-            (delete-region (nth 0 m) (nth 1 m))
-            (insert (orgabilize-make-link-string url fragment))
-            t)))
-       ((thing-at-point-looking-at org-link-plain-re)
-        (let* ((m (match-data))
-               (url (match-string 0)))
+  (interactive "P" org-mode)
+  (save-match-data
+    (cond
+     ((thing-at-point-looking-at org-link-bracket-re)
+      (let ((m (match-data))
+            (url (match-string 1)))
+        (when (string-match-p (rx bol "http" (?  "s") ":") url)
           (delete-region (nth 0 m) (nth 1 m))
           (insert (orgabilize-make-link-string url fragment))
-          t))))))
+          t)))
+     ((thing-at-point-looking-at org-link-plain-re)
+      (let* ((m (match-data))
+             (url (match-string 0)))
+        (delete-region (nth 0 m) (nth 1 m))
+        (insert (orgabilize-make-link-string url fragment))
+        t)))))
 
 (defun orgabilize--url-for-link (url)
   "Return a URL for linking."
