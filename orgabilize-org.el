@@ -385,7 +385,7 @@ The argument should be an HTML dom as parsed using
                        (orgabilize-org-wrap-branch
                         (->> (org-ml-build-paragraph)
                              (org-ml-set-children (list caption-text))))
-                     (message "Empty figure element: " x)
+                     (message "Empty figure element: %s" x)
                      (orgabilize-org-wrap-branch
                       (->> (org-ml-build-paragraph)
                            (org-ml-set-children (list "error: empty figure element"))))))))
