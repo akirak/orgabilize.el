@@ -186,7 +186,9 @@ You can also add this function to `org-ctrl-c-ctrl-c-hook'."
              (url (match-string 0)))
         (delete-region (nth 0 m) (nth 1 m))
         (insert (orgabilize-make-link-string url fragment))
-        t)))))
+        t))
+     (t
+      (user-error "Not on a link")))))
 
 (defun orgabilize--url-for-link (url)
   "Return a URL for linking."
