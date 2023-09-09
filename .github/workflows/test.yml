@@ -6,6 +6,8 @@ on:
       - '**.el'
   workflow_dispatch:
 
+
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -14,8 +16,7 @@ jobs:
     - uses: cachix/install-nix-action@v18
       with:
         extra_nix_config: |
-          extra-substituters = https://emacs-ci.cachix.org
-          extra-trusted-public-keys = emacs-ci.cachix.org-1:B5FVOrxhXXrOL0S+tQ7USrhjMT5iOPH+QN9q0NItom4=
+          accept-flake-config = true
     - name: Lint
       run: nix run .#nomake -- orgabilize
     - name: Test
