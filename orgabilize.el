@@ -187,7 +187,7 @@ You can also add this function to `org-ctrl-c-ctrl-c-hook'."
         (delete-region (nth 0 m) (nth 1 m))
         (insert (orgabilize-make-link-string url fragment))
         t))
-     (t
+     ((called-interactively-p 'interactive)
       (user-error "Not on a link")))))
 
 (defun orgabilize--url-for-link (url)
