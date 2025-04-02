@@ -1,0 +1,58 @@
+{
+  "buttercup": {
+    "author": "Jorgen Schaefer <contact@jorgenschaefer.de>",
+    "meta": {
+      "description": "Behavior-Driven Emacs Lisp Testing",
+      "homepage": "https://github.com/jorgenschaefer/emacs-buttercup",
+      "maintainers": [
+        "Ola Nilsson <ola.nilsson@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-fhLbW7nwA1Yy4a9J7MvsCXBuQNOYd6IzVdl65CsNfD4=",
+    "packageRequires": {
+      "emacs": "24.4"
+    },
+    "version": "1.37"
+  },
+  "dash": {
+    "author": "Magnar Sveen <magnars@gmail.com>",
+    "meta": {
+      "description": "A modern list library for Emacs",
+      "homepage": "https://github.com/magnars/dash.el",
+      "maintainers": [
+        "Basil L. Contovounesios <basil@contovou.net>"
+      ]
+    },
+    "narHash": "sha256-1TxfU88Ouc9Tx+ouzLxTKNpS/HjJPOsFobyZuIJxUyQ=",
+    "packageRequires": {
+      "emacs": "24"
+    },
+    "version": "2.20.0"
+  },
+  "org-ml": {
+    "author": "Nathan Dwarshuis <ndwar@yavin4.ch>",
+    "meta": {
+      "description": "Functional Org Mode API"
+    },
+    "narHash": "sha256-BBbwBh+G3hb1HP493Y57K19iNdRAuogeh0XBGZsbQJo=",
+    "packageRequires": {
+      "dash": "2.17",
+      "emacs": "27.1",
+      "org": "9.3",
+      "s": "1.12"
+    },
+    "version": "5.8.8"
+  },
+  "s": {
+    "author": "Magnar Sveen <magnars@gmail.com>",
+    "meta": {
+      "description": "The long lost Emacs string manipulation library.",
+      "maintainers": [
+        "Jason Milkins <jasonm23@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-fbF/SyPwEiJICaPBq0xWj2yLWjdNwkaLF2iYvZ2EO1k=",
+    "packageRequires": {},
+    "version": "1.13.1"
+  }
+}

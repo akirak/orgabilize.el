@@ -1,0 +1,21 @@
+name: Check Emacs Lisp
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.*'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    uses: emacs-twist/elisp-workflows/.github/workflows/compile-and-test.yml@master
+    with:
+      melpa: github:akirak/melpa/akirak

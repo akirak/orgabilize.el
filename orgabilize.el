@@ -1,10 +1,10 @@
 ;;; orgabilize.el --- Converts web pages into Org -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021,2022 Akira Komamura
+;; Copyright (C) 2021-2023,2025 Akira Komamura
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1") (org-ml "5.6") (dash "2.19"))
+;; Package-Requires: ((emacs "28.1") (org-ml "5.6") (dash "2.19"))
 ;; Keywords: hypermedia outlines wp
 ;; URL: https://github.com/akirak/orgabilize.el
 
@@ -63,7 +63,7 @@
   "Return an Org link string for URL."
   (let ((clean-url (orgabilize--url-for-link url)))
     (if add-fragment
-        (if-let (fragment (orgabilize-document-fragment url))
+        (if-let* ((fragment (orgabilize-document-fragment url)))
             (org-link-make-string (concat clean-url "#" fragment)
                                   (or (orgabilize-document-fragment-title
                                        url fragment)
@@ -159,7 +159,7 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
   (let ((buffer-name (format "*Orgabilize<%s>*" url)))
     (if (get-buffer buffer-name)
         (pop-to-buffer buffer-name)
-      (if-let (buffer (orgabilize-content-buffer url))
+      (if-let* ((buffer (orgabilize-content-buffer url)))
           (with-current-buffer buffer
             (html-mode)
             (rename-buffer buffer-name)

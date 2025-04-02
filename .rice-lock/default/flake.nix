@@ -1,6 +1,5 @@
 {
-  description =
-    "THIS IS AN AUTO-GENERATED FILE. PLEASE DON'T EDIT IT MANUALLY.";
+  description = "THIS IS AN AUTO-GENERATED FILE. PLEASE DON'T EDIT IT MANUALLY.";
   inputs = {
     buttercup = {
       flake = false;
@@ -18,12 +17,6 @@
       flake = false;
       owner = "ndwarshuis";
       repo = "org-ml";
-      type = "github";
-    };
-    orgabilize = {
-      flake = false;
-      owner = "akirak";
-      repo = "orgabilize.el";
       type = "github";
     };
     "s" = {

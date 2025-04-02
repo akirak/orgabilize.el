@@ -152,8 +152,8 @@ nil is returned."
 (defmacro orgabilize-with-source-as-buffer (url &rest progn)
   "Evaluate an expression with a buffer for the content of a url."
   (declare (indent 1))
-  `(when-let (buffer (ignore-errors
-                       (orgabilize-content-buffer ,url)))
+  `(when-let* ((buffer (ignore-errors
+                         (orgabilize-content-buffer ,url))))
      (unwind-protect
          (with-current-buffer buffer
            ,@progn)

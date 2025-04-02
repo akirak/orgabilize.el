@@ -3,11 +3,11 @@
     "buttercup": {
       "flake": false,
       "locked": {
-        "lastModified": 1678401580,
-        "narHash": "sha256-M2VzfUoFpRBMxG9YNSmN1R3cFY8zduHO+4Fp1+uhqi8=",
+        "lastModified": 1739747704,
+        "narHash": "sha256-fhLbW7nwA1Yy4a9J7MvsCXBuQNOYd6IzVdl65CsNfD4=",
         "owner": "jorgenschaefer",
         "repo": "emacs-buttercup",
-        "rev": "e7e51a6e2a4e6e0e9935299d4366395403cd04e3",
+        "rev": "c467c659b2c5b7029e20909331e072d7301af1d5",
         "type": "github"
       },
       "original": {
@@ -19,11 +19,11 @@
     "dash": {
       "flake": false,
       "locked": {
-        "lastModified": 1665650208,
-        "narHash": "sha256-b0dAQPHOv0oZkmkV/0kHqSWwz45W1mWrx1Iv83/M6B0=",
+        "lastModified": 1741784833,
+        "narHash": "sha256-1TxfU88Ouc9Tx+ouzLxTKNpS/HjJPOsFobyZuIJxUyQ=",
         "owner": "magnars",
         "repo": "dash.el",
-        "rev": "3df46d7d9fe74f52a661565888e4d31fd760f0df",
+        "rev": "fcb5d831fc08a43f984242c7509870f30983c27c",
         "type": "github"
       },
       "original": {
@@ -35,32 +35,16 @@
     "org-ml": {
       "flake": false,
       "locked": {
-        "lastModified": 1657553317,
-        "narHash": "sha256-N8HdBql05TX2wV+tSos8A2XW7goEPEXSj8k9Oi41oEg=",
+        "lastModified": 1681086652,
+        "narHash": "sha256-BBbwBh+G3hb1HP493Y57K19iNdRAuogeh0XBGZsbQJo=",
         "owner": "ndwarshuis",
         "repo": "org-ml",
-        "rev": "385e3bee497f858705144d7ab5e6570d31d3ffe8",
+        "rev": "f57336a9126a168ad32ccce017c072474555395a",
         "type": "github"
       },
       "original": {
         "owner": "ndwarshuis",
         "repo": "org-ml",
-        "type": "github"
-      }
-    },
-    "orgabilize": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1673630443,
-        "narHash": "sha256-K2P9wb0SyJxLJ4k1toc4hy/MX5+fecBTGN7kaBlZq+I=",
-        "owner": "akirak",
-        "repo": "orgabilize.el",
-        "rev": "1220fad7df864c3d5000c1d4909f4f3d173a302c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "akirak",
-        "repo": "orgabilize.el",
         "type": "github"
       }
     },
@@ -69,18 +53,17 @@
         "buttercup": "buttercup",
         "dash": "dash",
         "org-ml": "org-ml",
-        "orgabilize": "orgabilize",
         "s": "s"
       }
     },
     "s": {
       "flake": false,
       "locked": {
-        "lastModified": 1662132008,
-        "narHash": "sha256-rB+b9Z2KISHwYIgXm2g2EX/EUpA9NWDFfuzrj93dzAc=",
+        "lastModified": 1681482914,
+        "narHash": "sha256-fbF/SyPwEiJICaPBq0xWj2yLWjdNwkaLF2iYvZ2EO1k=",
         "owner": "magnars",
         "repo": "s.el",
-        "rev": "e957dcb0677da18b2bb60ad867db5df5c35b5616",
+        "rev": "dda84d38fffdaf0c9b12837b504b402af910d01d",
         "type": "github"
       },
       "original": {
