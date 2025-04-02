@@ -38,6 +38,8 @@
 (require 'xml)
 (require 'sgml-mode)
 
+(declare-function orgabilize-playwright-get-title "ext:orgabilize-playwright")
+
 ;;;; Custom variables
 
 (defcustom orgabilize-executable "readable"
@@ -69,6 +71,22 @@ The default escaping is to convert whitespaces (including tabs
 and newlines) into a single space."
   :group 'orgabilize
   :type '(alist :key-type regexp :value-type string))
+
+(defcustom orgabilize-use-playwright nil
+  "Whether to use Playwright MCP as backend for scraping web pages.
+
+If the value is t, Playwright will be used as the primary way to scrape
+the web page where it is implemented.
+
+If the value is @='fallback, Playwright will be used as a fallback. For
+extracting the page title, it sill be used when there is no @='<title>
+element in the source, which means the resource is fetched twice.
+
+To configure the MCP server, see `orgabilize-playwright-mcp-name'."
+  :group 'orgabilize
+  :type '(choice (const "Use as the primary way" t)
+                 (const "As a fallback" fallback)
+                 (const "Don't use" nil)))
 
 ;;;; Variables
 (defvar orgabilize-document-tracker nil)
@@ -212,19 +230,26 @@ from the file. This is intended for testing."
 (cl-defmethod orgabilize-document-title ((url string))
   "Return the title of a document at URL."
   (let ((url (orgabilize-clean-url-string url)))
-    (if-let* ((document (orgabilize-document--maybe-instance url)))
-        (oref document title)
-      ;; If the document is not available yet, prevent from parsing of the full
-      ;; document only for retrieving the title, because it is slow.
-      (orgabilize-with-source-as-buffer url
-        (goto-char (point-min))
-        (save-match-data
-          (let ((case-fold-search t))
-            (when (re-search-forward (rx "<title") nil t)
-              (goto-char (car (match-data)))
-              (xmltok-forward)
-              (orgabilize-document--escape-title
-               (orgabilize--parse-sgml-text)))))))))
+    (or (when (eq orgabilize-use-playwright t)
+          (require 'orgabilize-playwright)
+          (orgabilize-playwright-get-title url))
+        (if-let* ((document (orgabilize-document--maybe-instance url)))
+            (oref document title)
+          ;; If the document is not available yet, prevent from parsing of the full
+          ;; document only for retrieving the title, because it is slow.
+          (orgabilize-with-source-as-buffer url
+            (goto-char (point-min))
+            (cond
+             ((save-match-data
+                (let ((case-fold-search t))
+                  (when (re-search-forward (rx "<title") nil t)
+                    (goto-char (car (match-data)))
+                    (xmltok-forward)
+                    (orgabilize-document--escape-title
+                     (orgabilize--parse-sgml-text))))))
+             ((eq orgabilize-use-playwright 'fallback)
+              (require 'orgabilize-playwright)
+              (orgabilize-playwright-get-title url))))))))
 (cl-defmethod orgabilize-document-title ((x orgabilize-document))
   "Return the title of X."
   (oref x title))
