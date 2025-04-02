@@ -86,7 +86,7 @@ original content body of the url. This is intended for testing."
       (with-temp-buffer
         (insert-file-contents source-file)
         (orgabilize--run-readable url))
-    (if-let (buffer (orgabilize-content-buffer url))
+    (if-let* ((buffer (orgabilize-content-buffer url)))
         (unwind-protect
             (with-current-buffer buffer
               (orgabilize--run-readable url))
@@ -212,7 +212,7 @@ from the file. This is intended for testing."
 (cl-defmethod orgabilize-document-title ((url string))
   "Return the title of a document at URL."
   (let ((url (orgabilize-clean-url-string url)))
-    (if-let (document (orgabilize-document--maybe-instance url))
+    (if-let* ((document (orgabilize-document--maybe-instance url)))
         (oref document title)
       ;; If the document is not available yet, prevent from parsing of the full
       ;; document only for retrieving the title, because it is slow.
@@ -242,12 +242,12 @@ from the file. This is intended for testing."
         ((go (in-header list)
            (pcase list
              (`(,tag ,attrs . ,children)
-              (if-let (level (cl-case tag
+              (if-let* ((level (cl-case tag
                                (h2 2)
                                (h3 3)
                                (h4 4)
                                (h5 5)
-                               (h6 6)))
+                               (h6 6))))
                   (push (make-orgabilize-toc-item
                          :level level
                          :text (string-trim (parse-heading-inlines children))
@@ -277,15 +277,15 @@ from the file. This is intended for testing."
 (cl-defmethod orgabilize-document-canonical-url ((url string))
   "Return the html dom of the content of URL."
   (let ((url (orgabilize-clean-url-string url)))
-    (if-let (document (orgabilize-document--maybe-instance url))
+    (if-let* ((document (orgabilize-document--maybe-instance url)))
         (orgabilize-document-canonical-url document)
       (orgabilize-document--canonical-url-1 url))))
 (cl-defmethod orgabilize-document-canonical-url ((x orgabilize-document))
   "Return the html dom of the content of X."
-  (if-let (v (oref x canonical-url))
+  (if-let* ((v (oref x canonical-url)))
       (unless (eq v t)
         v)
-    (if-let (url (orgabilize-document--canonical-url-1 (oref x url)))
+    (if-let* ((url (orgabilize-document--canonical-url-1 (oref x url))))
         (oset x canonical-url url)
       (oset x canonical-url t)
       nil)))
@@ -302,7 +302,7 @@ from the file. This is intended for testing."
     (catch 'canonical-url
       (let ((case-fold-search t))
         (while (re-search-forward (rx "<" (* space) "link" space) nil t)
-          (if-let (context (car (sgml-get-context)))
+          (if-let* ((context (car (sgml-get-context))))
               (let ((bound (sgml-tag-end context)))
                 (when (re-search-forward (rx space "rel="
                                              (? (any "\"'"))

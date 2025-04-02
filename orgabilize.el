@@ -63,7 +63,7 @@
   "Return an Org link string for URL."
   (let ((clean-url (orgabilize--url-for-link url)))
     (if add-fragment
-        (if-let (fragment (orgabilize-document-fragment url))
+        (if-let* ((fragment (orgabilize-document-fragment url)))
             (org-link-make-string (concat clean-url "#" fragment)
                                   (or (orgabilize-document-fragment-title
                                        url fragment)
@@ -159,7 +159,7 @@ If CHECKBOX is non-nil, add an empty checkbox to each item."
   (let ((buffer-name (format "*Orgabilize<%s>*" url)))
     (if (get-buffer buffer-name)
         (pop-to-buffer buffer-name)
-      (if-let (buffer (orgabilize-content-buffer url))
+      (if-let* ((buffer (orgabilize-content-buffer url)))
           (with-current-buffer buffer
             (html-mode)
             (rename-buffer buffer-name)

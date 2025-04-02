@@ -119,7 +119,7 @@ The argument should be an HTML dom as parsed using
               (replace-regexp-in-string (rx (+ (any space))) " ")))
        (language-p
          (name)
-         (when-let (mode (intern-soft (concat name "-mode")))
+         (when-let* ((mode (intern-soft (concat name "-mode"))))
            (commandp mode)))
        (language-from-class
          (class)
@@ -153,7 +153,7 @@ The argument should be an HTML dom as parsed using
                                                (cdr (assq 'link org-element-object-restrictions))))))
                              content)
                        content
-                     (if-let (href (alist-get 'href attrs))
+                     (if-let* ((href (alist-get 'href attrs)))
                          (->> (org-ml-build-link href)
                               (org-ml-set-children (unwrap-inlines content))
                               (orgabilize-org-wrap-branch))
@@ -169,7 +169,7 @@ The argument should be an HTML dom as parsed using
                ;;
                ;; Maybe we should print the class if it is an
                ;; empty element...
-               (when-let (ochildren (go-inline children))
+               (when-let* ((ochildren (go-inline children)))
                  (->> (org-ml-build-italic)
                       (org-ml-set-children (unwrap-inlines ochildren))
                       (orgabilize-org-wrap-branch))))
@@ -296,8 +296,8 @@ The argument should be an HTML dom as parsed using
        (go-item
          (bullet item)
          (-let* (((paragraph-content children) (-split-with (-not #'list-p) item))
-                 (paragraph (when-let (oparagraph (unwrap-inlines
-                                                   (go-inline paragraph-content)))
+                 (paragraph (when-let* ((oparagraph (unwrap-inlines
+                                                   (go-inline paragraph-content))))
                               (->> (org-ml-build-paragraph)
                                    (org-ml-set-children oparagraph))))
                  (ochildren (->> children
@@ -324,8 +324,8 @@ The argument should be an HTML dom as parsed using
                                              :id (alist-get 'id attrs)
                                              :text (normalize-space (text-content children))))
               (p
-               (when-let (ochildren (unwrap-inlines
-                                     (go-inline children)))
+               (when-let* ((ochildren (unwrap-inlines
+                                     (go-inline children))))
                  (condition-case err
                      (orgabilize-org-wrap-branch
                       (->> (org-ml-build-paragraph)
@@ -419,8 +419,8 @@ The argument should be an HTML dom as parsed using
                      (org-ml-set-children (unwrap-inlines
                                            (go-inline (list x)))))))
               (otherwise
-               (when-let (ochildren (unwrap-inlines
-                                     (go-inline (list x))))
+               (when-let* ((ochildren (unwrap-inlines
+                                     (go-inline (list x)))))
                  (orgabilize-org-wrap-branch
                   (->> (org-ml-build-paragraph)
                        (org-ml-set-children ochildren)))))))
@@ -470,7 +470,7 @@ The argument should be an HTML dom as parsed using
                    partitions)
                  (--map (let* ((h (car it))
                                (children (-map #'orgabilize-org-unwrap (cdr it)))
-                               (drawer (when-let (id (orgabilize-org-headline-id h))
+                               (drawer (when-let* ((id (orgabilize-org-headline-id h)))
                                          (org-ml-build-property-drawer
                                           (org-ml-build-node-property
                                            "ORGABILIZE_ORIGIN_FRAGMENT_URL"
@@ -568,7 +568,7 @@ at LEVEL, with optional TAGS."
                       (when (equal kwd orgabilize-org-src-language-keyword)
                         (setq src-language
                               (string-trim (match-string 2)))))))))
-            (if-let (start (org-find-property orgabilize-org-origin-url-property clean-url))
+            (if-let* ((start (org-find-property orgabilize-org-origin-url-property clean-url)))
                 (if force
                     (progn
                       (goto-char start)
@@ -583,7 +583,7 @@ at LEVEL, with optional TAGS."
               (re-search-forward org-heading-regexp nil t)))
         (with-current-buffer (setq new-buffer (create-file-buffer outfile))
           (insert "#+title: " title "\n")
-          (when-let (excerpt (oref document excerpt))
+          (when-let* ((excerpt (oref document excerpt)))
             (org-ml-insert (point)
                            (org-ml-build-special-block
                             "excerpt" (org-ml-build-paragraph excerpt))))
@@ -681,7 +681,7 @@ be inserted."
            ((pred stringp)
             (org-ml-build-paragraph (string-trim node)))
            (`(a ,attrs . ,contents)
-            (if-let (href (cdr (assq 'href attrs)))
+            (if-let* ((href (cdr (assq 'href attrs))))
                 (org-ml-build-paragraph
                  (apply #'org-ml-build-link
                         (if (string-prefix-p "#" href)
@@ -745,7 +745,7 @@ be inserted."
 (defun orgabilize-org-find-archived-file (file)
   "Find a file in the Org archive."
   (interactive (list (orgabilize-org-complete-file "File in Org archive: ")))
-  (if-let (buffer (find-buffer-visiting file))
+  (if-let* ((buffer (find-buffer-visiting file)))
       (pop-to-buffer-same-window buffer)
     (with-current-buffer (find-file-noselect file)
       (save-excursion
@@ -776,7 +776,7 @@ be inserted."
 
 (defun orgabilize-org--archive-file-info (file)
   (or (gethash file orgabilize-org-archive-file-cache)
-      (when-let (buffer (find-buffer-visiting file))
+      (when-let* ((buffer (find-buffer-visiting file)))
         (with-current-buffer buffer
           (org-with-wide-buffer
            (goto-char (point-min))
@@ -799,8 +799,8 @@ be inserted."
      :url (org-entry-get nil "ORGABILIZE_ORIGIN_URL"))))
 
 (defun orgabilize-org-annotate-file (file)
-  (if-let (info (ignore-errors
-                  (orgabilize-org--archive-file-info file)))
+  (if-let* ((info (ignore-errors
+                    (orgabilize-org--archive-file-info file))))
       (concat (orgabilize-org-archive-file-title info)
               " "
               (propertize (orgabilize-org-archive-file-url info)
