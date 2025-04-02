@@ -332,7 +332,7 @@ from the file. This is intended for testing."
   (catch 'fragment-title
     (cl-labels
         ((inner-text-as-string (nodes)
-           (mapconcat #'node-text nodes))
+           (mapconcat #'node-text nodes ""))
          (node-text (node)
            (pcase node
              ((pred stringp)

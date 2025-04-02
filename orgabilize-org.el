@@ -33,6 +33,7 @@
 (require 'org-ml)
 (require 'orgabilize-document)
 (require 'orgabilize-utils)
+(require 'dash)
 
 (defconst orgabilize-org-origin-url-property
   "ORGABILIZE_ORIGIN_URL")
@@ -659,7 +660,7 @@ be inserted."
           url :checkbox checkbox :depth depth)
         (org-ml-to-string)
         (insert)))
-    (delete-region (pos-eol 0) (point))
+    (delete-region (line-end-position 0) (point))
     (beginning-of-line 2)))
 
 (cl-defun orgabilize-org--list-to-org (dom base-url &key checkbox depth)
