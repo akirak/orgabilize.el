@@ -18,4 +18,4 @@ jobs:
   check:
     uses: emacs-twist/elisp-workflows/.github/workflows/compile-and-test.yml@master
     with:
-      melpa: github:akirak/melpa/akirak
+      melpa: github:akirak/melpa/orgabilize

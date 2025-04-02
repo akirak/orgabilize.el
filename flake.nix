@@ -3,7 +3,10 @@
     { ... }:
     {
       elisp-rice = {
-        packages = [ "orgabilize" ];
+        packages = [
+          "orgabilize"
+          "orgabilize-playwright"
+        ];
         # TODO: Configure tests
         # tests = {
         #   buttercup.enable = true;
