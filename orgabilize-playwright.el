@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (mcp "5.6"))
+;; Package-Requires: ((emacs "28.1") (mcp "0.1"))
 ;; Keywords: hypermedia outlines wp
 ;; URL: https://github.com/akirak/orgabilize.el
 
