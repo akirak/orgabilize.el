@@ -46,6 +46,9 @@
     (setf (url-target obj) nil)
     (url-recreate-url obj)))
 
+(defun orgabilize--url-hostname (url)
+  (url-host (url-generic-parse-url url)))
+
 (defun orgabilize-decode-entity (string)
   "Decode SGML entities in STRING."
   (with-temp-buffer
