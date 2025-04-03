@@ -56,7 +56,7 @@ should run <https://github.com/microsoft/playwright-mcp>."
       (with-temp-buffer
         (insert (orgabilize-playwright--mcp-snapshot connection url))
         (goto-char (point-min))
-        (orgabilize-playwright--parse-title))
+        (orgabilize-playwright--parse-title url))
     (message "Playwright MCP is not configured or disconnected. See `orgabilize-playwright-mcp-name'")))
 
 (defun orgabilize-playwright--mcp-snapshot (connection url)
