@@ -57,15 +57,9 @@ should run <https://github.com/microsoft/playwright-mcp>."
         (insert (orgabilize-playwright--mcp-snapshot connection url))
         (goto-char (point-min))
         (orgabilize-playwright--parse-title url))
-    (message "Playwright MCP is not configured or disconnected. See `orgabilize-playwright-mcp-name'")))
-
-(defun orgabilize-playwright-get-title (url)
-  (if-let* ((connection (orgabilize-playwright--get-connection)))
-      (with-temp-buffer
-        (insert (orgabilize-playwright--mcp-snapshot connection url))
-        (goto-char (point-min))
-        (orgabilize-playwright--parse-title url))
-    (message "Playwright MCP is not configured or disconnected. See `orgabilize-playwright-mcp-name'")))
+    (message "Playwright MCP is not configured or disconnected.\
+See `orgabilize-playwright-mcp-name'")
+    nil))
 
 (defun orgabilize-playwright--mcp-snapshot (connection url)
   (mcp-call-tool connection "browser_navigate" (list :url url))
