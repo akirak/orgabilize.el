@@ -31,6 +31,7 @@
 
 (require 'orgabilize-fetch)
 (require 'orgabilize-utils)
+(require 'orgabilize-site)
 
 (require 'dash)
 (require 'eieio)
@@ -72,7 +73,9 @@ and newlines) into a single space."
   :group 'orgabilize
   :type '(alist :key-type regexp :value-type string))
 
-(defcustom orgabilize-host-title-fetchers nil
+(defcustom orgabilize-host-title-fetchers
+  '(("www.reddit.com" . orgabilize-site-reddit-title)
+    ("x.com" . orgabilize-site-twitter-title))
   "Alist of host-specific title fetchers.
 
 This should be a list of (HOST . FUNCTION) where HOST is a host name and
