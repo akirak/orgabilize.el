@@ -46,6 +46,10 @@ should run <https://github.com/microsoft/playwright-mcp>."
   :group 'orgabilize-playwright
   :type 'string)
 
+(defcustom orgabilize-playwright-mcp-sleep 0.5
+  "Number of seconds to wait for before taking a snapshot."
+  :type 'number)
+
 (defun orgabilize-playwright--get-connection ()
   "Return an active connection of the MCP server."
   (and orgabilize-playwright-mcp-name
@@ -63,6 +67,7 @@ See `orgabilize-playwright-mcp-name'")
 
 (defun orgabilize-playwright--mcp-snapshot (connection url)
   (mcp-call-tool connection "browser_navigate" (list :url url))
+  (sleep-for orgabilize-playwright-mcp-sleep)
   (thread-first
     (unwind-protect
         (mcp-call-tool connection "browser_snapshot" nil)
