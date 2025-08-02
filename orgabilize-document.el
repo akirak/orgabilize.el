@@ -242,11 +242,13 @@ from the file. This is intended for testing."
 (cl-defmethod orgabilize-document-title ((url string))
   "Return the title of a document at URL."
   (let ((url (orgabilize-clean-url-string url)))
-    (if-let* ((func (and orgabilize-host-title-fetchers
-                         (cdr (assoc (orgabilize--url-hostname url)
-                                     orgabilize-host-title-fetchers)))))
-        (funcall func url)
-      (or (when (eq orgabilize-use-playwright t)
+    (let ((func (and orgabilize-host-title-fetchers
+                     (cdr (assoc (orgabilize--url-hostname url)
+                                 orgabilize-host-title-fetchers)))))
+      (or (when func
+            (ignore-errors
+              (funcall func url)))
+          (when (eq orgabilize-use-playwright t)
             (require 'orgabilize-playwright)
             (orgabilize-playwright-get-title url))
           (if-let* ((document (orgabilize-document--maybe-instance url)))
